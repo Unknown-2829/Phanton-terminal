@@ -1,16 +1,15 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - Advanced PowerShell Startup Animation v3.0
+    Phantom Terminal - Advanced PowerShell Startup Animation v3.1
 .DESCRIPTION
     A fast, cinematic startup animation for Windows Terminal/PowerShell.
-    Features: Multi-color matrix, security loading, glitch effects, external config,
-    auto-update checking, and optimized StringBuilder rendering.
+    Features: Multiple themes (Phantom/Unknown), multi-color matrix, security loading,
+    glitch effects, external config, silent auto-update.
 .NOTES
     Creator: @unknownlll2829 (Telegram)
     GitHub: https://github.com/Unknown-2829/Phanton-terminal
-    Version: 3.0.0 "PHANTOM"
+    Version: 3.1.0
 .EXAMPLE
-    # One-line install:
     irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
 #>
 
@@ -18,14 +17,13 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.0.0"
+$Script:Version = "3.1.0"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
 $Script:ConfigFile = "$Script:ConfigDir\config.json"
 $Script:CacheFile = "$Script:ConfigDir\cache.json"
 
-# Ensure config directory exists
 if (-not (Test-Path $Script:ConfigDir)) {
     New-Item -ItemType Directory -Path $Script:ConfigDir -Force | Out-Null
 }
@@ -40,28 +38,71 @@ $Script:DefaultConfig = @{
     SecurityLoadSteps  = 8
     GlitchIntensity    = 3
     ShowSystemInfo     = $true
-    ShowUpdateNotice   = $true
-    Theme              = "Phantom"
-    UseUnicodeSymbols  = $true
+    Theme              = "Phantom"  # Phantom or Unknown
     AutoCheckUpdates   = $true
+    SilentUpdate       = $true      # Update silently in background
     UpdateCheckDays    = 1
-    UseFastRendering   = $true
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CONFIG FILE MANAGEMENT (JSON)
+# THEMES
+# ═══════════════════════════════════════════════════════════════════════════
+
+$Script:Themes = @{
+    Phantom = @{
+        Name = "Phantom"
+        Primary = "NeonPurple"
+        Secondary = "NeonCyan"
+        Accent = "HotPink"
+        Logo = @'
+ ____  _   _    _    _   _ _____ ___  __  __ 
+|  _ \| | | |  / \  | \ | |_   _/ _ \|  \/  |
+| |_) | |_| | / _ \ |  \| | | || | | | |\/| |
+|  __/|  _  |/ ___ \| |\  | | || |_| | |  | |
+|_|   |_| |_/_/   \_\_| \_| |_| \___/|_|  |_|
+'@
+        Title = "PHANTOM TERMINAL"
+        Quotes = @(
+            'In the shadows, we code.',
+            'Access denied. Until now.',
+            'The system fears what it cannot control.',
+            'We are the ghosts in the machine.'
+        )
+    }
+    Unknown = @{
+        Name = "Unknown"
+        Primary = "NeonGreen"
+        Secondary = "ElectricBlue"
+        Accent = "Gold"
+        Logo = @'
+ _   _ _   _ _  ___   _  _____        ___   _ 
+| | | | \ | | |/ / \ | |/ _ \ \      / / \ | |
+| | | |  \| | ' /|  \| | | | \ \ /\ / /|  \| |
+| |_| | |\  | . \| |\  | |_| |\ V  V / | |\  |
+ \___/|_| \_|_|\_\_| \_|\___/  \_/\_/  |_| \_|
+'@
+        Title = "UNKNOWN TERMINAL"
+        Quotes = @(
+            'Hidden in plain sight.',
+            'Anonymous by design.',
+            'The unknown cannot be traced.',
+            'Identity: NULL'
+        )
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CONFIG FILE MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Get-PhantomConfig {
     try {
         if (Test-Path $Script:ConfigFile) {
-            $loadedConfig = Get-Content $Script:ConfigFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction SilentlyContinue
-            if ($loadedConfig) {
+            $loaded = Get-Content $Script:ConfigFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction SilentlyContinue
+            if ($loaded) {
                 $config = $Script:DefaultConfig.Clone()
-                foreach ($key in $loadedConfig.Keys) {
-                    if ($config.ContainsKey($key)) {
-                        $config[$key] = $loadedConfig[$key]
-                    }
+                foreach ($key in $loaded.Keys) {
+                    if ($config.ContainsKey($key)) { $config[$key] = $loaded[$key] }
                 }
                 return $config
             }
@@ -73,9 +114,7 @@ function Get-PhantomConfig {
 
 function Save-PhantomConfig {
     param([hashtable]$Config)
-    try {
-        $Config | ConvertTo-Json -Depth 3 | Set-Content $Script:ConfigFile -Force -Encoding UTF8
-    } catch {}
+    try { $Config | ConvertTo-Json -Depth 3 | Set-Content $Script:ConfigFile -Force -Encoding UTF8 } catch {}
 }
 
 function Get-PhantomCache {
@@ -84,82 +123,90 @@ function Get-PhantomCache {
             return Get-Content $Script:CacheFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction SilentlyContinue
         }
     } catch {}
-    return @{ LastUpdateCheck = $null; LatestVersion = $null }
+    return @{ LastUpdateCheck = $null; LatestVersion = $null; UpdateAvailable = $false }
 }
 
 function Save-PhantomCache {
     param([hashtable]$Cache)
-    try {
-        $Cache | ConvertTo-Json | Set-Content $Script:CacheFile -Force -Encoding UTF8
-    } catch {}
+    try { $Cache | ConvertTo-Json | Set-Content $Script:CacheFile -Force -Encoding UTF8 } catch {}
 }
 
 $Script:Config = Get-PhantomConfig
+$Script:CurrentTheme = $Script:Themes[$Script:Config.Theme]
+if (-not $Script:CurrentTheme) { $Script:CurrentTheme = $Script:Themes["Phantom"] }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# AUTO-UPDATE CHECKER
+# SILENT AUTO-UPDATE (Background Job)
 # ═══════════════════════════════════════════════════════════════════════════
 
-function Test-PhantomUpdate {
-    param([switch]$Force)
-    
-    if (-not $Script:Config.AutoCheckUpdates -and -not $Force) { return $null }
+function Start-SilentUpdateCheck {
+    if (-not $Script:Config.AutoCheckUpdates) { return }
     
     $cache = Get-PhantomCache
     $now = Get-Date
     
-    if (-not $Force -and $cache.LastUpdateCheck) {
+    # Check if we need to check
+    if ($cache.LastUpdateCheck) {
         try {
             $lastCheck = [DateTime]::Parse($cache.LastUpdateCheck)
-            if (($now - $lastCheck).TotalDays -lt $Script:Config.UpdateCheckDays) {
-                if ($cache.LatestVersion -and $cache.LatestVersion -gt $Script:Version) {
-                    return $cache.LatestVersion
-                }
-                return $null
-            }
+            if (($now - $lastCheck).TotalDays -lt $Script:Config.UpdateCheckDays) { return }
         } catch {}
     }
     
-    try {
-        $apiUrl = "https://api.github.com/repos/$Script:RepoOwner/$Script:RepoName/releases/latest"
-        $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 5 -ErrorAction Stop
-        $latestVersion = $response.tag_name -replace '^v', ''
+    # Run update check in background (non-blocking)
+    $updateJob = Start-Job -ScriptBlock {
+        param($RepoOwner, $RepoName, $CurrentVersion, $CacheFile, $InstallPath, $SilentUpdate)
         
-        $cache.LastUpdateCheck = $now.ToString("o")
-        $cache.LatestVersion = $latestVersion
-        Save-PhantomCache -Cache $cache
-        
-        if ($latestVersion -gt $Script:Version) {
-            return $latestVersion
-        }
-    } catch {}
+        try {
+            $apiUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
+            $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 10 -ErrorAction Stop
+            $latestVersion = $response.tag_name -replace '^v', ''
+            
+            $cache = @{
+                LastUpdateCheck = (Get-Date).ToString("o")
+                LatestVersion = $latestVersion
+                UpdateAvailable = ($latestVersion -gt $CurrentVersion)
+            }
+            $cache | ConvertTo-Json | Set-Content $CacheFile -Force
+            
+            # Silent update if enabled and update available
+            if ($SilentUpdate -and $latestVersion -gt $CurrentVersion) {
+                $scriptUrl = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/main/PhantomStartup.ps1"
+                Invoke-WebRequest -Uri $scriptUrl -OutFile $InstallPath -UseBasicParsing
+            }
+        } catch {}
+    } -ArgumentList $Script:RepoOwner, $Script:RepoName, $Script:Version, $Script:CacheFile, "$HOME\PhantomStartup.ps1", $Script:Config.SilentUpdate
     
-    return $null
+    # Don't wait for job - let it run in background
+    Register-ObjectEvent -InputObject $updateJob -EventName StateChanged -Action {
+        Remove-Job -Job $sender -Force
+        Unregister-Event -SubscriptionId $eventsubscriber.SubscriptionId
+    } | Out-Null
 }
 
 function Update-PhantomTerminal {
     Write-Host "$($Script:Colors.NeonCyan)Checking for updates...$($Script:Colors.Reset)"
     
-    $latestVersion = Test-PhantomUpdate -Force
-    
-    if ($latestVersion) {
-        Write-Host "$($Script:Colors.Gold)New version available: v$latestVersion (current: v$Script:Version)$($Script:Colors.Reset)"
-        Write-Host "$($Script:Colors.NeonGreen)Downloading update...$($Script:Colors.Reset)"
+    try {
+        $apiUrl = "https://api.github.com/repos/$Script:RepoOwner/$Script:RepoName/releases/latest"
+        $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 10 -ErrorAction Stop
+        $latestVersion = $response.tag_name -replace '^v', ''
         
-        try {
-            $installUrl = "https://raw.githubusercontent.com/$Script:RepoOwner/$Script:RepoName/main/install.ps1"
-            Invoke-Expression (Invoke-RestMethod -Uri $installUrl)
-            Write-Host "$($Script:Colors.NeonGreen)Update complete! Restart your terminal.$($Script:Colors.Reset)"
-        } catch {
-            Write-Host "$($Script:Colors.BloodRed)Update failed: $_$($Script:Colors.Reset)"
+        if ($latestVersion -gt $Script:Version) {
+            Write-Host "$($Script:Colors.Gold)Updating to v$latestVersion...$($Script:Colors.Reset)"
+            $scriptUrl = "https://raw.githubusercontent.com/$Script:RepoOwner/$Script:RepoName/main/PhantomStartup.ps1"
+            Invoke-WebRequest -Uri $scriptUrl -OutFile "$HOME\PhantomStartup.ps1" -UseBasicParsing
+            Write-Host "$($Script:Colors.NeonGreen)Updated! Restart terminal to apply.$($Script:Colors.Reset)"
+        } else {
+            Write-Host "$($Script:Colors.NeonGreen)Already on latest version (v$Script:Version)$($Script:Colors.Reset)"
         }
-    } else {
-        Write-Host "$($Script:Colors.NeonGreen)You are running the latest version (v$Script:Version)$($Script:Colors.Reset)"
+    } catch {
+        Write-Host "$($Script:Colors.BloodRed)Update failed: $_$($Script:Colors.Reset)"
     }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# THEME COLORS (ANSI 256 Escape Codes)
+# COLORS
 # ═══════════════════════════════════════════════════════════════════════════
 
 $Script:ESC = [char]27
@@ -167,7 +214,6 @@ $Script:ESC = [char]27
 $Script:Colors = @{
     Reset        = "$Script:ESC[0m"
     Bold         = "$Script:ESC[1m"
-    Dim          = "$Script:ESC[2m"
     NeonGreen    = "$Script:ESC[38;5;118m"
     NeonPurple   = "$Script:ESC[38;5;129m"
     NeonCyan     = "$Script:ESC[38;5;87m"
@@ -175,7 +221,6 @@ $Script:Colors = @{
     HotPink      = "$Script:ESC[38;5;205m"
     Gold         = "$Script:ESC[38;5;220m"
     BloodRed     = "$Script:ESC[38;5;196m"
-    DarkRed      = "$Script:ESC[38;5;88m"
     BrightRed    = "$Script:ESC[1;91m"
     White        = "$Script:ESC[1;37m"
     Gray         = "$Script:ESC[38;5;244m"
@@ -183,116 +228,54 @@ $Script:Colors = @{
     Shadow       = "$Script:ESC[38;5;235m"
 }
 
+# Get theme colors
+function Get-ThemeColor { param([string]$Type)
+    $colorName = $Script:CurrentTheme[$Type]
+    return $Script:Colors[$colorName]
+}
+
 # ═══════════════════════════════════════════════════════════════════════════
-# SYMBOLS (ASCII Safe)
+# SYMBOLS
 # ═══════════════════════════════════════════════════════════════════════════
 
 $Script:Symbols = @{
-    Skull       = "[X]"
-    Fire        = "[*]"
-    Shield      = "[#]"
-    Lock        = "[=]"
-    Key         = "[-]"
-    HighVoltage = "[!]"
-    Bomb        = "[O]"
-    Success     = "[+]"
-    Failure     = "[x]"
-    Warning     = "[!]"
-    Prompt      = ">"
-    Branch      = "~"
-    Update      = "[U]"
-    HLine       = "="
-    VLine       = "|"
-    TopLeft     = "+"
-    TopRight    = "+"
-    BottomLeft  = "+"
-    BottomRight = "+"
-    TLeft       = "+"
-    TRight      = "+"
+    Skull = "[X]"; Shield = "[#]"; Lock = "[=]"; Key = "[-]"
+    HighVoltage = "[!]"; Bomb = "[O]"; Success = "[+]"; Failure = "[x]"
+    Warning = "[!]"; Prompt = ">"; Branch = "~"; Update = "[U]"
+    HLine = "="; VLine = "|"
+    TopLeft = "+"; TopRight = "+"; BottomLeft = "+"; BottomRight = "+"
+    TLeft = "+"; TRight = "+"
 }
 
-# Try Unicode symbols if supported
 try {
     if ($Host.UI.RawUI.OutputEncoding.EncodingName -match "Unicode|UTF") {
         $Script:Symbols = @{
-            Skull       = [char]0x2620
-            Fire        = [char]0x2605
-            Shield      = [char]0x2591
-            Lock        = [char]0x25A0
-            Key         = [char]0x25CF
-            HighVoltage = [char]0x26A1
-            Bomb        = [char]0x25C6
-            Success     = [char]0x2714
-            Failure     = [char]0x2718
-            Warning     = [char]0x26A0
-            Prompt      = [char]0x00BB
-            Branch      = [char]0x2192
-            Update      = [char]0x21BB
-            HLine       = [char]0x2550
-            VLine       = [char]0x2551
-            TopLeft     = [char]0x2554
-            TopRight    = [char]0x2557
-            BottomLeft  = [char]0x255A
-            BottomRight = [char]0x255D
-            TLeft       = [char]0x2560
-            TRight      = [char]0x2563
+            Skull = [char]0x2620; Shield = [char]0x2591; Lock = [char]0x25A0; Key = [char]0x25CF
+            HighVoltage = [char]0x26A1; Bomb = [char]0x25C6; Success = [char]0x2714; Failure = [char]0x2718
+            Warning = [char]0x26A0; Prompt = [char]0x00BB; Branch = [char]0x2192; Update = [char]0x21BB
+            HLine = [char]0x2550; VLine = [char]0x2551
+            TopLeft = [char]0x2554; TopRight = [char]0x2557; BottomLeft = [char]0x255A; BottomRight = [char]0x255D
+            TLeft = [char]0x2560; TRight = [char]0x2563
         }
     }
 } catch {}
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ASCII ART
+# RENDERING
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:LogoArt = @'
- ____  _   _    _    _   _ _____ ___  __  __ 
-|  _ \| | | |  / \  | \ | |_   _/ _ \|  \/  |
-| |_) | |_| | / _ \ |  \| | | || | | | |\/| |
-|  __/|  _  |/ ___ \| |\  | | || |_| | |  | |
-|_|   |_| |_/_/   \_\_| \_| |_| \___/|_|  |_|
-'@
-
-# ═══════════════════════════════════════════════════════════════════════════
-# FAST RENDERING ENGINE (StringBuilder)
-# ═══════════════════════════════════════════════════════════════════════════
-
-function New-RenderBuffer {
-    return [System.Text.StringBuilder]::new(4096)
-}
-
-function Add-ToBuffer {
-    param([System.Text.StringBuilder]$Buffer, [string]$Text)
-    [void]$Buffer.Append($Text)
-}
-
-function Write-Buffer {
-    param([System.Text.StringBuilder]$Buffer)
-    Write-Host $Buffer.ToString() -NoNewline
-    [void]$Buffer.Clear()
-}
-
-function Move-CursorFast {
-    param([int]$Row, [int]$Col)
-    return "$Script:ESC[$Row;${Col}H"
-}
-
-# ═══════════════════════════════════════════════════════════════════════════
-# UTILITY FUNCTIONS
-# ═══════════════════════════════════════════════════════════════════════════
+function New-RenderBuffer { return [System.Text.StringBuilder]::new(4096) }
+function Add-ToBuffer { param([System.Text.StringBuilder]$Buffer, [string]$Text); [void]$Buffer.Append($Text) }
+function Write-Buffer { param([System.Text.StringBuilder]$Buffer); Write-Host $Buffer.ToString() -NoNewline; [void]$Buffer.Clear() }
+function Move-CursorFast { param([int]$Row, [int]$Col); return "$Script:ESC[$Row;${Col}H" }
 
 function Hide-Cursor { Write-Host "$Script:ESC[?25l" -NoNewline }
 function Show-Cursor { Write-Host "$Script:ESC[?25h" -NoNewline }
 function Clear-TerminalScreen { Clear-Host; Write-Host "$Script:ESC[H" -NoNewline }
 
 function Get-TerminalSize {
-    try {
-        return @{
-            Width  = $Host.UI.RawUI.WindowSize.Width
-            Height = $Host.UI.RawUI.WindowSize.Height
-        }
-    } catch {
-        return @{ Width = 120; Height = 30 }
-    }
+    try { return @{ Width = $Host.UI.RawUI.WindowSize.Width; Height = $Host.UI.RawUI.WindowSize.Height } }
+    catch { return @{ Width = 120; Height = 30 } }
 }
 
 function Write-Centered {
@@ -304,14 +287,14 @@ function Write-Centered {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ANIMATION ENGINE
+# ANIMATIONS
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Show-SecurityLoadingBar {
-    param([string]$Description, [int]$Steps = 8, [string]$Color = $Script:Colors.NeonGreen)
+    param([string]$Description, [int]$Steps = 8, [string]$Color)
+    if (-not $Color) { $Color = Get-ThemeColor "Primary" }
     
     $buffer = New-RenderBuffer
-    
     for ($i = 1; $i -le $Steps; $i++) {
         $filled = [string]::new([char]0x2588, $i)
         $empty = [string]::new([char]0x2591, ($Steps - $i))
@@ -320,10 +303,8 @@ function Show-SecurityLoadingBar {
         [void]$buffer.Clear()
         Add-ToBuffer $buffer "`r  $($Script:Colors.Gray)$Description $($Script:Colors.DarkGray)[$Color$filled$($Script:Colors.DarkGray)$empty] $($Script:Colors.White)$($percent.ToString().PadLeft(3))%"
         Write-Buffer $buffer
-        
         Start-Sleep -Milliseconds 30
     }
-    
     Write-Host " $($Script:Colors.NeonGreen)$($Script:Symbols.Success)$($Script:Colors.Reset)"
 }
 
@@ -333,19 +314,20 @@ function Show-MultiColorMatrix {
     Clear-TerminalScreen
     $size = Get-TerminalSize
     $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    $colorList = @($Script:Colors.NeonGreen, $Script:Colors.NeonPurple, $Script:Colors.NeonCyan, $Script:Colors.ElectricBlue)
+    
+    # Theme-based colors
+    $primary = Get-ThemeColor "Primary"
+    $secondary = Get-ThemeColor "Secondary"
+    $colorList = @($primary, $secondary, $Script:Colors.NeonCyan, $Script:Colors.ElectricBlue)
     
     $drops = New-Object int[] $size.Width
-    for ($i = 0; $i -lt $size.Width; $i++) {
-        $drops[$i] = (Get-Random -Minimum 0 -Maximum $size.Height)
-    }
+    for ($i = 0; $i -lt $size.Width; $i++) { $drops[$i] = (Get-Random -Minimum 0 -Maximum $size.Height) }
     
     $endTime = (Get-Date).AddSeconds($DurationSeconds)
     $buffer = New-RenderBuffer
     
     while ((Get-Date) -lt $endTime) {
         [void]$buffer.Clear()
-        
         for ($col = 0; $col -lt [Math]::Min($size.Width, $drops.Count); $col++) {
             $char = $chars[(Get-Random -Minimum 0 -Maximum $chars.Length)]
             $color = $colorList[$col % $colorList.Length]
@@ -354,30 +336,18 @@ function Show-MultiColorMatrix {
             if ($row -lt $size.Height -and $row -ge 1) {
                 Add-ToBuffer $buffer (Move-CursorFast -Row $row -Col $col)
                 Add-ToBuffer $buffer "$color$char"
-                
                 $leadPos = $row + 1
                 if ($leadPos -lt $size.Height) {
                     Add-ToBuffer $buffer (Move-CursorFast -Row $leadPos -Col $col)
                     Add-ToBuffer $buffer "$($Script:Colors.White)$char"
                 }
-                
-                $fadePos = $row - 3
-                if ($fadePos -ge 1) {
-                    Add-ToBuffer $buffer (Move-CursorFast -Row $fadePos -Col $col)
-                    Add-ToBuffer $buffer "$($Script:Colors.Shadow)$char"
-                }
             }
-            
             $drops[$col]++
-            if ($drops[$col] -ge $size.Height -and (Get-Random -Minimum 0 -Maximum 5) -eq 0) {
-                $drops[$col] = 1
-            }
+            if ($drops[$col] -ge $size.Height -and (Get-Random -Minimum 0 -Maximum 5) -eq 0) { $drops[$col] = 1 }
         }
-        
         Write-Buffer $buffer
         Start-Sleep -Milliseconds 12
     }
-    
     Write-Host $Script:Colors.Reset
 }
 
@@ -385,42 +355,34 @@ function Show-CoreIgnition {
     Clear-TerminalScreen
     $size = Get-TerminalSize
     $yPos = [Math]::Floor($size.Height / 2) - 3
+    $primary = Get-ThemeColor "Primary"
     
-    $statuses = @(
-        @{ Text = "[CORE_INIT]"; Symbol = $Script:Symbols.HighVoltage },
-        @{ Text = "[ENCRYPTION_KEYS]"; Symbol = $Script:Symbols.Key },
-        @{ Text = "[FIREWALL_MATRIX]"; Symbol = $Script:Symbols.Shield },
-        @{ Text = "[AUTH_BYPASS]"; Symbol = $Script:Symbols.Lock },
-        @{ Text = "[SYSTEM_ARMED]"; Symbol = $Script:Symbols.Bomb }
-    )
-    
+    $statuses = @("[CORE_INIT]", "[ENCRYPTION_KEYS]", "[FIREWALL_MATRIX]", "[AUTH_BYPASS]", "[SYSTEM_ARMED]")
     $buffer = New-RenderBuffer
     
-    foreach ($item in $statuses) {
-        $text = "$($item.Symbol) $($item.Text)"
-        $padding = [Math]::Max(0, [Math]::Floor(($size.Width - $text.Length - 2) / 2))
+    foreach ($text in $statuses) {
+        $padding = [Math]::Max(0, [Math]::Floor(($size.Width - $text.Length - 4) / 2))
         
         [void]$buffer.Clear()
         Add-ToBuffer $buffer (Move-CursorFast -Row $yPos -Col 1)
-        Add-ToBuffer $buffer "$(' ' * $padding)$($Script:Colors.BloodRed)$text"
+        Add-ToBuffer $buffer "$(' ' * $padding)$($Script:Colors.BloodRed)$($Script:Symbols.HighVoltage) $text"
         Write-Buffer $buffer
         Start-Sleep -Milliseconds 60
         
         [void]$buffer.Clear()
         Add-ToBuffer $buffer (Move-CursorFast -Row $yPos -Col 1)
-        Add-ToBuffer $buffer "$(' ' * $padding)$($Script:Colors.NeonGreen)$text$($Script:Colors.Reset)"
+        Add-ToBuffer $buffer "$(' ' * $padding)$primary$($Script:Symbols.HighVoltage) $text$($Script:Colors.Reset)"
         Write-Buffer $buffer
         Write-Host ""
-        
         $yPos++
         Start-Sleep -Milliseconds 30
     }
-    
     Start-Sleep -Milliseconds 150
 }
 
 function Show-GlitchReveal {
-    param([string]$Art, [string]$Color = $Script:Colors.NeonGreen)
+    param([string]$Art, [string]$Color)
+    if (-not $Color) { $Color = Get-ThemeColor "Primary" }
     
     Clear-TerminalScreen
     $size = Get-TerminalSize
@@ -438,14 +400,9 @@ function Show-GlitchReveal {
         $row = $startRow
         foreach ($line in $lines) {
             Add-ToBuffer $buffer (Move-CursorFast -Row $row -Col $startCol)
-            $glitched = ""
-            foreach ($char in $line.ToCharArray()) {
-                if ($char -ne ' ' -and (Get-Random -Minimum 0 -Maximum 10) -lt 3) {
-                    $glitched += $glitchChars[(Get-Random -Minimum 0 -Maximum $glitchChars.Length)]
-                } else {
-                    $glitched += $char
-                }
-            }
+            $glitched = -join ($line.ToCharArray() | ForEach-Object {
+                if ($_ -ne ' ' -and (Get-Random -Max 10) -lt 3) { $glitchChars[(Get-Random -Max $glitchChars.Length)] } else { $_ }
+            })
             Add-ToBuffer $buffer "$($Script:Colors.BrightRed)$glitched$($Script:Colors.Reset)"
             $row++
         }
@@ -463,42 +420,35 @@ function Show-GlitchReveal {
         Start-Sleep -Milliseconds 20
         $row++
     }
-    
     Start-Sleep -Milliseconds 300
 }
 
 function Show-SecuritySequence {
     Clear-TerminalScreen
     Write-Host "`n"
+    $primary = Get-ThemeColor "Primary"
     
-    $securityItems = @(
-        @{ Desc = "Initializing AES-256 Encryption"; Symbol = $Script:Symbols.Lock },
-        @{ Desc = "Generating SHA-512 Hashes"; Symbol = $Script:Symbols.Key },
-        @{ Desc = "Activating Firewall Matrix"; Symbol = $Script:Symbols.Shield },
-        @{ Desc = "Establishing Secure Channel"; Symbol = $Script:Symbols.HighVoltage }
-    )
-    
-    Write-Centered "$($Script:Colors.NeonPurple)$($Script:Symbols.Shield) INITIALIZING SECURITY PROTOCOLS $($Script:Symbols.Shield)$($Script:Colors.Reset)"
+    Write-Centered "$primary$($Script:Symbols.Shield) INITIALIZING SECURITY PROTOCOLS $($Script:Symbols.Shield)$($Script:Colors.Reset)"
     Write-Host ""
     
-    foreach ($item in $securityItems) {
-        Show-SecurityLoadingBar -Description "$($item.Symbol) $($item.Desc)" -Steps $Script:Config.SecurityLoadSteps -Color $Script:Colors.NeonGreen
+    @("Initializing AES-256 Encryption", "Generating SHA-512 Hashes", "Activating Firewall Matrix", "Establishing Secure Channel") | ForEach-Object {
+        Show-SecurityLoadingBar -Description "$($Script:Symbols.Lock) $_" -Steps $Script:Config.SecurityLoadSteps -Color $primary
     }
-    
     Start-Sleep -Milliseconds 150
 }
 
 function Show-Dashboard {
     Clear-TerminalScreen
     $size = Get-TerminalSize
+    $primary = Get-ThemeColor "Primary"
+    $secondary = Get-ThemeColor "Secondary"
     
     $user = $env:USERNAME
     $computer = $env:COMPUTERNAME
     $os = try { (Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption } catch { "Windows" }
     $datetime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $uptime = try { 
-        $bootTime = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
-        $span = (Get-Date) - $bootTime
+        $span = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
         "{0}d {1}h {2}m" -f $span.Days, $span.Hours, $span.Minutes
     } catch { "N/A" }
     
@@ -508,170 +458,144 @@ function Show-Dashboard {
     $hLine = [string]::new([char]$Script:Symbols.HLine, ($boxWidth - 2))
     
     Write-Host ""
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.TopLeft)$hLine$($Script:Symbols.TopRight)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.TopLeft)$hLine$($Script:Symbols.TopRight)$($Script:Colors.Reset)"
     
-    $title = "$($Script:Symbols.Skull) PHANTOM TERMINAL v$Script:Version $($Script:Symbols.Skull)"
+    $title = "$($Script:Symbols.Skull) $($Script:CurrentTheme.Title) v$Script:Version $($Script:Symbols.Skull)"
     $titlePad = [Math]::Max(0, $boxWidth - $title.Length - 4)
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.VLine) $($Script:Colors.NeonCyan)$title$(' ' * $titlePad)$($Script:Colors.NeonPurple)$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.VLine) $secondary$title$(' ' * $titlePad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
     
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
-    $infoLines = @(
-        @{ Label = "Operator"; Value = $user; Color = $Script:Colors.NeonGreen },
-        @{ Label = "Host"; Value = $computer; Color = $Script:Colors.Gold },
-        @{ Label = "System"; Value = $os; Color = $Script:Colors.Gold },
-        @{ Label = "Uptime"; Value = $uptime; Color = $Script:Colors.NeonCyan },
-        @{ Label = "Time"; Value = $datetime; Color = $Script:Colors.NeonCyan }
-    )
-    
-    foreach ($info in $infoLines) {
-        $lineContent = "  $($info.Label): $($info.Color)$($info.Value)$($Script:Colors.White)"
-        $cleanLen = ("  " + $info.Label + ": " + $info.Value).Length
+    @(
+        @{ L = "Operator"; V = $user; C = $Script:Colors.NeonGreen },
+        @{ L = "Host"; V = $computer; C = $Script:Colors.Gold },
+        @{ L = "System"; V = $os; C = $Script:Colors.Gold },
+        @{ L = "Uptime"; V = $uptime; C = $Script:Colors.NeonCyan },
+        @{ L = "Theme"; V = $Script:CurrentTheme.Name; C = $secondary },
+        @{ L = "Time"; V = $datetime; C = $Script:Colors.NeonCyan }
+    ) | ForEach-Object {
+        $content = "  $($_.L): $($_.C)$($_.V)$($Script:Colors.White)"
+        $cleanLen = ("  " + $_.L + ": " + $_.V).Length
         $rightPad = [Math]::Max(0, $boxWidth - $cleanLen - 3)
-        Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.VLine)$($Script:Colors.White)$lineContent$(' ' * $rightPad)$($Script:Colors.NeonPurple)$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+        Write-Host "$indent$primary$($Script:Symbols.VLine)$($Script:Colors.White)$content$(' ' * $rightPad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
     }
     
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
-    $quotes = @(
-        'In the shadows, we code.',
-        'Access denied. Until now.',
-        'The system fears what it cannot control.',
-        'We are the ghosts in the machine.'
-    )
-    $quote = $quotes[(Get-Random -Minimum 0 -Maximum $quotes.Count)]
+    $quote = $Script:CurrentTheme.Quotes[(Get-Random -Max $Script:CurrentTheme.Quotes.Count)]
     $quotePad = [Math]::Max(0, $boxWidth - $quote.Length - 4)
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.VLine) $($Script:Colors.Gray)$quote$(' ' * $quotePad)$($Script:Colors.NeonPurple)$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.VLine) $($Script:Colors.Gray)$quote$(' ' * $quotePad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
     
-    Write-Host "$indent$($Script:Colors.NeonPurple)$($Script:Symbols.BottomLeft)$hLine$($Script:Symbols.BottomRight)$($Script:Colors.Reset)"
+    Write-Host "$indent$primary$($Script:Symbols.BottomLeft)$hLine$($Script:Symbols.BottomRight)$($Script:Colors.Reset)"
     Write-Host ""
-    
-    if ($Script:Config.ShowUpdateNotice) {
-        $newVersion = Test-PhantomUpdate
-        if ($newVersion) {
-            Write-Host "$indent$($Script:Colors.Gold)$($Script:Symbols.Update) Update available: v$newVersion (run phantom-update)$($Script:Colors.Reset)"
-        }
-    }
-    
     Write-Host "$indent$($Script:Colors.DarkGray)Type 'phantom-help' for commands.$($Script:Colors.Reset)"
     Write-Host ""
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MAIN STARTUP SEQUENCE
+# MAIN
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Start-PhantomTerminal {
-    if (-not $Script:Config.AnimationEnabled) {
-        Show-Dashboard
-        return
-    }
+    # Start silent update check in background
+    Start-SilentUpdateCheck
+    
+    if (-not $Script:Config.AnimationEnabled) { Show-Dashboard; return }
     
     try {
         Hide-Cursor
         Show-CoreIgnition
         Show-SecuritySequence
         Show-MultiColorMatrix -DurationSeconds $Script:Config.MatrixDuration
-        Show-GlitchReveal -Art $Script:LogoArt -Color $Script:Colors.NeonGreen
+        Show-GlitchReveal -Art $Script:CurrentTheme.Logo -Color (Get-ThemeColor "Primary")
         Show-Dashboard
     } catch {
-        Write-Host "$($Script:Colors.BloodRed)$($Script:Symbols.Warning) Animation error: $_$($Script:Colors.Reset)"
+        Write-Host "$($Script:Colors.BloodRed)Animation error: $_$($Script:Colors.Reset)"
         Show-Dashboard
-    } finally {
-        Show-Cursor
-    }
+    } finally { Show-Cursor }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CUSTOM PROMPT
+# PROMPT
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Set-PhantomPrompt {
     function global:prompt {
         $lastSuccess = $?
-        $location = (Get-Location).Path
-        $folder = Split-Path $location -Leaf
-        if (-not $folder) { $folder = $location }
+        $folder = Split-Path (Get-Location).Path -Leaf
+        if (-not $folder) { $folder = (Get-Location).Path }
         
         $gitBranch = ""
         if (Test-Path .git -ErrorAction SilentlyContinue) {
-            try {
-                $branch = git branch --show-current 2>$null
-                if ($branch) {
-                    $gitBranch = " $($Script:Colors.DarkGray)on $($Script:Colors.HotPink)$($Script:Symbols.Branch) $branch$($Script:Colors.Reset)"
-                }
-            } catch {}
+            try { $b = git branch --show-current 2>$null; if ($b) { $gitBranch = " $($Script:Colors.DarkGray)on $($Script:Colors.HotPink)$b" } } catch {}
         }
         
-        $statusSymbol = if ($lastSuccess) { 
-            "$($Script:Colors.NeonGreen)$($Script:Symbols.Success)" 
-        } else { 
-            "$($Script:Colors.BloodRed)$($Script:Symbols.Failure)" 
-        }
+        $status = if ($lastSuccess) { "$($Script:Colors.NeonGreen)$($Script:Symbols.Success)" } else { "$($Script:Colors.BloodRed)$($Script:Symbols.Failure)" }
+        $primary = Get-ThemeColor "Primary"
         
-        $line1 = "$($Script:Colors.NeonGreen)$env:USERNAME$($Script:Colors.DarkGray)@$($Script:Colors.NeonCyan)$folder$gitBranch"
-        "$line1`n$statusSymbol $($Script:Colors.NeonPurple)$($Script:Symbols.Prompt)$($Script:Colors.Reset) "
+        "$primary$env:USERNAME$($Script:Colors.DarkGray)@$($Script:Colors.NeonCyan)$folder$gitBranch$($Script:Colors.Reset)`n$status $primary$($Script:Symbols.Prompt)$($Script:Colors.Reset) "
     }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# EXPORTED COMMANDS
+# COMMANDS
 # ═══════════════════════════════════════════════════════════════════════════
 
-function global:phantom-reload {
-    Start-PhantomTerminal
-}
+function global:phantom-reload { Start-PhantomTerminal }
+function global:phantom-matrix { Hide-Cursor; Show-MultiColorMatrix -DurationSeconds 5; Show-Cursor }
+function global:phantom-dash { Show-Dashboard }
+function global:phantom-update { Update-PhantomTerminal }
 
 function global:phantom-help {
     Write-Host ""
-    Write-Host "$($Script:Colors.NeonCyan)=== PHANTOM TERMINAL v$Script:Version ===$($Script:Colors.Reset)"
+    Write-Host "$($Script:Colors.NeonCyan)=== $($Script:CurrentTheme.Title) v$Script:Version ===$($Script:Colors.Reset)"
     Write-Host ""
-    Write-Host "  $($Script:Colors.Gold)phantom-reload$($Script:Colors.White)  - Replay startup animation$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-help$($Script:Colors.White)    - Show this help$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-config$($Script:Colors.White)  - Show configuration$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-matrix$($Script:Colors.White)  - Run matrix animation$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-reload$($Script:Colors.White)  - Replay animation$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-theme$($Script:Colors.White)   - Switch theme (Phantom/Unknown)$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-config$($Script:Colors.White)  - Show/edit config$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-matrix$($Script:Colors.White)  - Matrix animation$($Script:Colors.Reset)"
     Write-Host "  $($Script:Colors.Gold)phantom-dash$($Script:Colors.White)    - Show dashboard$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-update$($Script:Colors.White)  - Check for updates$($Script:Colors.Reset)"
-    Write-Host ""
-    Write-Host "$($Script:Colors.DarkGray)Config: $Script:ConfigFile$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-update$($Script:Colors.White)  - Check updates$($Script:Colors.Reset)"
     Write-Host ""
 }
 
 function global:phantom-config {
     param([switch]$Edit)
-    
-    if ($Edit) {
-        notepad $Script:ConfigFile
-    } else {
-        Write-Host ""
-        Write-Host "$($Script:Colors.NeonCyan)Current Configuration:$($Script:Colors.Reset)"
-        Write-Host "$($Script:Colors.DarkGray)File: $Script:ConfigFile$($Script:Colors.Reset)"
-        Write-Host ""
+    if ($Edit) { notepad $Script:ConfigFile } 
+    else {
+        Write-Host "`n$($Script:Colors.NeonCyan)Config: $Script:ConfigFile$($Script:Colors.Reset)`n"
         $Script:Config.GetEnumerator() | Sort-Object Name | ForEach-Object {
             Write-Host "  $($Script:Colors.Gold)$($_.Key)$($Script:Colors.White): $($_.Value)$($Script:Colors.Reset)"
         }
-        Write-Host ""
-        Write-Host "$($Script:Colors.DarkGray)Run: phantom-config -Edit$($Script:Colors.Reset)"
-        Write-Host ""
+        Write-Host "`n$($Script:Colors.DarkGray)Run: phantom-config -Edit$($Script:Colors.Reset)`n"
     }
 }
 
-function global:phantom-matrix {
-    Hide-Cursor
-    Show-MultiColorMatrix -DurationSeconds 5
-    Show-Cursor
-}
-
-function global:phantom-dash {
-    Show-Dashboard
-}
-
-function global:phantom-update {
-    Update-PhantomTerminal
+function global:phantom-theme {
+    param([string]$ThemeName)
+    
+    $available = $Script:Themes.Keys -join ", "
+    
+    if (-not $ThemeName) {
+        Write-Host "`n$($Script:Colors.NeonCyan)Available themes: $available$($Script:Colors.Reset)"
+        Write-Host "$($Script:Colors.Gold)Current: $($Script:Config.Theme)$($Script:Colors.Reset)"
+        Write-Host "$($Script:Colors.DarkGray)Usage: phantom-theme Phantom$($Script:Colors.Reset)`n"
+        return
+    }
+    
+    if ($Script:Themes.ContainsKey($ThemeName)) {
+        $Script:Config.Theme = $ThemeName
+        Save-PhantomConfig -Config $Script:Config
+        $Script:CurrentTheme = $Script:Themes[$ThemeName]
+        Write-Host "$($Script:Colors.NeonGreen)Theme changed to: $ThemeName$($Script:Colors.Reset)"
+        Write-Host "$($Script:Colors.DarkGray)Run 'phantom-reload' to see changes$($Script:Colors.Reset)"
+    } else {
+        Write-Host "$($Script:Colors.BloodRed)Unknown theme. Available: $available$($Script:Colors.Reset)"
+    }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ENTRY POINT
+# ENTRY
 # ═══════════════════════════════════════════════════════════════════════════
 
 Set-PhantomPrompt

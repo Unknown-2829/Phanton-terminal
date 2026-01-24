@@ -5,6 +5,22 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-01-24
+
+### Added
+- **Theme System** - Switch between Phantom and Unknown themes
+- **Unknown Theme** - Green/Blue neon with anonymous styling
+- **phantom-theme command** - Easy theme switching
+- **Silent Auto-Update** - Background update check without disturbance
+- **Theme selection during install** - Choose theme at installation
+
+### Changed
+- Auto-update now runs silently in background using PowerShell jobs
+- Dashboard shows current theme
+- Colors and logos adapt to selected theme
+
+---
+
 ## [3.0.1] - 2026-01-24
 
 ### Fixed
