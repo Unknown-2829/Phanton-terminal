@@ -1,9 +1,8 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - One-Line Installer
+    Phantom Terminal - Installer v3.2
 .DESCRIPTION
-    Downloads and installs Phantom Terminal startup animation.
-    Interactive theme selection with arrow keys.
+    Interactive installer with theme and effect options.
     Run: irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
 #>
 
@@ -19,91 +18,33 @@ $C = @{
     Purple = "$ESC[38;5;129m"; Cyan = "$ESC[38;5;87m"; Green = "$ESC[38;5;118m"
     Blue = "$ESC[38;5;39m"; Gold = "$ESC[38;5;220m"; Red = "$ESC[38;5;196m"
     White = "$ESC[1;37m"; Gray = "$ESC[38;5;244m"; DGray = "$ESC[38;5;240m"
-    Reset = "$ESC[0m"; Bold = "$ESC[1m"; Dim = "$ESC[2m"
+    Reset = "$ESC[0m"
 }
 
 function Show-Header {
     Clear-Host
     Write-Host ""
     Write-Host "$($C.Purple)  ╔══════════════════════════════════════════════════════╗$($C.Reset)"
-    Write-Host "$($C.Purple)  ║$($C.Cyan)        PHANTOM TERMINAL INSTALLER v3.1           $($C.Purple)║$($C.Reset)"
+    Write-Host "$($C.Purple)  ║$($C.Cyan)        PHANTOM TERMINAL INSTALLER v3.2           $($C.Purple)║$($C.Reset)"
     Write-Host "$($C.Purple)  ║$($C.Gray)        github.com/Unknown-2829/Phanton-terminal  $($C.Purple)║$($C.Reset)"
     Write-Host "$($C.Purple)  ╚══════════════════════════════════════════════════════╝$($C.Reset)"
     Write-Host ""
 }
 
-function Show-ThemeSelector {
-    param([int]$Selected = 0)
-    
-    $themes = @(
-        @{
-            Name = "PHANTOM"
-            Color = $C.Purple
-            Accent = $C.Cyan
-            Desc = "Purple/Cyan neon • Ghost in the machine"
-            Art = @(
-                " ____  _   _    _    _   _ _____ ___  __  __ "
-                "|  _ \| | | |  / \  | \ | |_   _/ _ \|  \/  |"
-                "|  __/|  _  |/ ___ \| |\  | | || |_| | |  | |"
-                "|_|   |_| |_/_/   \_\_| \_| |_| \___/|_|  |_|"
-            )
-        },
-        @{
-            Name = "UNKNOWN"
-            Color = $C.Green
-            Accent = $C.Blue
-            Desc = "Green/Blue neon • Anonymous by design"
-            Art = @(
-                " _   _ _   _ _  ___   _  _____        ___   _ "
-                "| | | | \ | | |/ / \ | |/ _ \ \      / / \ | |"
-                "| |_| | |\  | . \| |\  | |_| |\ V  V /| |\  |"
-                " \___/|_| \_|_|\_\_| \_|\___/  \_/\_/ |_| \_|"
-            )
-        }
-    )
-    
-    Write-Host "$($C.Gold)  SELECT YOUR THEME$($C.Reset)"
-    Write-Host "$($C.DGray)  Use [1] or [2] to select, [Enter] to confirm$($C.Reset)"
-    Write-Host ""
-    
-    for ($i = 0; $i -lt $themes.Count; $i++) {
-        $t = $themes[$i]
-        $isSelected = ($i -eq $Selected)
-        
-        if ($isSelected) {
-            $border = $t.Color
-            $marker = "$($C.Green)>>$($C.Reset)"
-        } else {
-            $border = $C.DGray
-            $marker = "  "
-        }
-        
-        Write-Host ""
-        Write-Host "  $marker $border╔════════════════════════════════════════════════╗$($C.Reset)"
-        Write-Host "     $border║$($C.Reset)  $($t.Color)[$($i + 1)] $($t.Name)$($C.Reset)$((' ' * (38 - $t.Name.Length)))$border║$($C.Reset)"
-        Write-Host "     $border╠════════════════════════════════════════════════╣$($C.Reset)"
-        
-        foreach ($line in $t.Art) {
-            $pad = 46 - $line.Length
-            if ($pad -lt 0) { $pad = 0 }
-            Write-Host "     $border║$($C.Reset) $($t.Color)$line$((' ' * $pad))$border║$($C.Reset)"
-        }
-        
-        Write-Host "     $border╠════════════════════════════════════════════════╣$($C.Reset)"
-        Write-Host "     $border║$($C.Reset)  $($C.Gray)$($t.Desc)$((' ' * (44 - $t.Desc.Length)))$border║$($C.Reset)"
-        Write-Host "     $border╚════════════════════════════════════════════════╝$($C.Reset)"
-    }
-    
-    return $themes[$Selected].Name
+function Show-Option {
+    param([string]$Num, [string]$Name, [string]$Desc, [string]$Color = $C.White, [bool]$Selected = $false)
+    $marker = if ($Selected) { "$($C.Green)>>$($C.Reset)" } else { "  " }
+    Write-Host "  $marker $Color[$Num] $Name$($C.Reset)"
+    Write-Host "      $($C.Gray)$Desc$($C.Reset)"
 }
 
-# Main Installation
+# Main
 Show-Header
 
 # Clean previous
 $isReinstall = Test-Path $InstallPath
 if ($isReinstall) {
-    Write-Host "  $($C.Gold)[*]$($C.Gray) Removing previous installation...$($C.Reset)"
+    Write-Host "  $($C.Gold)[*]$($C.Gray) Cleaning previous installation...$($C.Reset)"
     Remove-Item $InstallPath -Force -ErrorAction SilentlyContinue
     if (Test-Path $PROFILE) {
         $content = Get-Content $PROFILE -Raw -ErrorAction SilentlyContinue
@@ -111,71 +52,129 @@ if ($isReinstall) {
             ($content -split "`n" | Where-Object { $_ -notmatch 'PhantomStartup' -and $_ -notmatch 'Phantom Terminal' }) -join "`n" | Set-Content $PROFILE -Force
         }
     }
-    Write-Host "  $($C.Green)[+]$($C.White) Cleaned$($C.Reset)"
+    Write-Host "  $($C.Green)[+]$($C.White) Previous version removed$($C.Reset)"
     Write-Host ""
 }
 
-# Theme Selection
-$selected = 0
-Show-ThemeSelector -Selected $selected
+# ═══════════════════════════════════════════════════════════════════════════
+# OPTION 1: Theme Selection
+# ═══════════════════════════════════════════════════════════════════════════
 
+Write-Host "  $($C.Gold)═══ STEP 1: SELECT THEME ═══$($C.Reset)"
 Write-Host ""
-Write-Host "  $($C.White)Your choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
-$input = Read-Host
-
-if ($input -eq "2") {
-    $selected = 1
-}
-
-$selectedTheme = if ($selected -eq 0) { "Phantom" } else { "Unknown" }
-
-# Path Display Option
+Show-Option -Num "1" -Name "PHANTOM" -Desc "Purple/Cyan neon • Ghost in the machine" -Color $C.Purple
 Write-Host ""
-Write-Host "  $($C.Gold)PROMPT PATH DISPLAY$($C.Reset)"
-Write-Host "  $($C.Gray)[1] Full path   (C:\Users\Name\Projects)$($C.Reset)"
-Write-Host "  $($C.Gray)[2] Folder only (Projects)$($C.Reset)"
+Show-Option -Num "2" -Name "UNKNOWN" -Desc "Green/Blue neon • Anonymous by design" -Color $C.Green
 Write-Host ""
-Write-Host "  $($C.White)Your choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$themeChoice = Read-Host
+$selectedTheme = if ($themeChoice -eq "2") { "Unknown" } else { "Phantom" }
+Write-Host "  $($C.Green)[+]$($C.White) Theme: $selectedTheme$($C.Reset)"
+Write-Host ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# OPTION 2: Matrix Mode
+# ═══════════════════════════════════════════════════════════════════════════
+
+Write-Host "  $($C.Gold)═══ STEP 2: MATRIX RAIN MODE ═══$($C.Reset)"
+Write-Host ""
+Show-Option -Num "1" -Name "Letters" -Desc "Classic letter rain (ABCDEF...)" -Color $C.Cyan
+Write-Host ""
+Show-Option -Num "2" -Name "Binary" -Desc "Binary rain (0101...)" -Color $C.Green
+Write-Host ""
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$matrixChoice = Read-Host
+$matrixMode = if ($matrixChoice -eq "2") { "Binary" } else { "Letters" }
+Write-Host "  $($C.Green)[+]$($C.White) Matrix: $matrixMode$($C.Reset)"
+Write-Host ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# OPTION 3: Path Display
+# ═══════════════════════════════════════════════════════════════════════════
+
+Write-Host "  $($C.Gold)═══ STEP 3: PROMPT PATH DISPLAY ═══$($C.Reset)"
+Write-Host ""
+Show-Option -Num "1" -Name "Full Path" -Desc "Show complete path (C:\Users\Name\Projects)" -Color $C.Cyan
+Write-Host ""
+Show-Option -Num "2" -Name "Folder Only" -Desc "Show folder name only (Projects)" -Color $C.Blue
+Write-Host ""
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
 $pathChoice = Read-Host
+$showFullPath = $pathChoice -ne "2"
+Write-Host "  $($C.Green)[+]$($C.White) Path: $(if ($showFullPath) { 'Full' } else { 'Folder only' })$($C.Reset)"
+Write-Host ""
 
-$showFullPath = $true
-if ($pathChoice -eq "2") {
-    $showFullPath = $false
-    Write-Host "  $($C.Green)[+]$($C.White) Path display: $($C.Cyan)Folder only$($C.Reset)"
-} else {
-    Write-Host "  $($C.Green)[+]$($C.White) Path display: $($C.Cyan)Full path$($C.Reset)"
-}
+# ═══════════════════════════════════════════════════════════════════════════
+# OPTION 4: Effects
+# ═══════════════════════════════════════════════════════════════════════════
+
+Write-Host "  $($C.Gold)═══ STEP 4: VISUAL EFFECTS ═══$($C.Reset)"
+Write-Host ""
+
+# CPU/RAM
+Write-Host "  $($C.White)Show CPU/RAM usage bars? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$cpuRamChoice = Read-Host
+$showCpuRam = $cpuRamChoice -ne "n" -and $cpuRamChoice -ne "N"
+Write-Host "  $($C.Green)[+]$($C.White) CPU/RAM bars: $(if ($showCpuRam) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
+
+# Typing Effect
+Write-Host "  $($C.White)Typing effect for quotes? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$typingChoice = Read-Host
+$typingEffect = $typingChoice -ne "n" -and $typingChoice -ne "N"
+Write-Host "  $($C.Green)[+]$($C.White) Typing effect: $(if ($typingEffect) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
+
+# Gradient
+Write-Host "  $($C.White)Gradient colors for logo? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$gradientChoice = Read-Host
+$gradientText = $gradientChoice -ne "n" -and $gradientChoice -ne "N"
+Write-Host "  $($C.Green)[+]$($C.White) Gradient: $(if ($gradientText) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
+
+# Auto Update
+Write-Host "  $($C.White)Enable auto-update? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$autoUpdateChoice = Read-Host
+$autoUpdate = $autoUpdateChoice -ne "n" -and $autoUpdateChoice -ne "N"
+Write-Host "  $($C.Green)[+]$($C.White) Auto-update: $(if ($autoUpdate) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
+Write-Host ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# INSTALLATION
+# ═══════════════════════════════════════════════════════════════════════════
 
 Show-Header
-if ($selected -eq 0) {
-    Write-Host "  $($C.Green)[+]$($C.White) Theme: $($C.Purple)PHANTOM$($C.Reset)"
-} else {
-    Write-Host "  $($C.Green)[+]$($C.White) Theme: $($C.Green)UNKNOWN$($C.Reset)"
-}
-Write-Host "  $($C.Green)[+]$($C.White) Path: $(if ($showFullPath) { 'Full path' } else { 'Folder only' })$($C.Reset)"
+Write-Host "  $($C.Gold)═══ INSTALLING ═══$($C.Reset)"
 Write-Host ""
 
 try {
     # Download
-    Write-Host "  $($C.Gold)[1/3]$($C.White) Downloading script...$($C.Reset)"
+    Write-Host "  $($C.Cyan)[1/3]$($C.White) Downloading script...$($C.Reset)"
     Invoke-WebRequest -Uri "$RepoUrl/PhantomStartup.ps1" -OutFile $InstallPath -UseBasicParsing
-    Write-Host "  $($C.Green)[+]$($C.White) Downloaded to $($C.Gray)$InstallPath$($C.Reset)"
+    Write-Host "  $($C.Green)[+]$($C.White) Downloaded$($C.Reset)"
 
     # Profile
-    Write-Host "  $($C.Gold)[2/3]$($C.White) Configuring profile...$($C.Reset)"
+    Write-Host "  $($C.Cyan)[2/3]$($C.White) Configuring profile...$($C.Reset)"
     if (!(Test-Path $PROFILE)) { New-Item -Path $PROFILE -ItemType File -Force | Out-Null }
     Add-Content $PROFILE "`n# Phantom Terminal`n. `"$InstallPath`""
     Write-Host "  $($C.Green)[+]$($C.White) Profile updated$($C.Reset)"
 
     # Config
-    Write-Host "  $($C.Gold)[3/3]$($C.White) Saving configuration...$($C.Reset)"
+    Write-Host "  $($C.Cyan)[3/3]$($C.White) Saving configuration...$($C.Reset)"
     if (!(Test-Path $ConfigDir)) { New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null }
     
     @{
-        AnimationEnabled = $true; MatrixDuration = 2; SecurityLoadSteps = 8
-        GlitchIntensity = 3; ShowSystemInfo = $true; Theme = $selectedTheme
+        AnimationEnabled = $true
+        MatrixDuration = 2
+        MatrixMode = $matrixMode
+        SecurityLoadSteps = 8
+        GlitchIntensity = 3
+        ShowSystemInfo = $true
+        ShowCpuRam = $showCpuRam
         ShowFullPath = $showFullPath
-        AutoCheckUpdates = $true; SilentUpdate = $true; UpdateCheckDays = 1
+        TypingEffect = $typingEffect
+        GradientText = $gradientText
+        Theme = $selectedTheme
+        AutoCheckUpdates = $autoUpdate
+        SilentUpdate = $true
+        UpdateCheckDays = 1
     } | ConvertTo-Json | Set-Content $ConfigFile -Force
     Write-Host "  $($C.Green)[+]$($C.White) Config saved$($C.Reset)"
 
@@ -186,10 +185,14 @@ try {
     Write-Host ""
     Write-Host "  $($C.Cyan)Restart your terminal to see the animation!$($C.Reset)"
     Write-Host ""
+    Write-Host "  $($C.Gold)Your Settings:$($C.Reset)"
+    Write-Host "    Theme: $selectedTheme | Matrix: $matrixMode | Path: $(if ($showFullPath) {'Full'} else {'Folder'})"
+    Write-Host "    CPU/RAM: $(if ($showCpuRam) {'Yes'} else {'No'}) | Typing: $(if ($typingEffect) {'Yes'} else {'No'}) | Gradient: $(if ($gradientText) {'Yes'} else {'No'})"
+    Write-Host ""
     Write-Host "  $($C.Gold)Commands:$($C.Reset)"
     Write-Host "    $($C.White)phantom-help$($C.Gray)   - All commands$($C.Reset)"
     Write-Host "    $($C.White)phantom-theme$($C.Gray)  - Change theme$($C.Reset)"
-    Write-Host "    $($C.White)phantom-reload$($C.Gray) - Replay animation$($C.Reset)"
+    Write-Host "    $($C.White)phantom-config$($C.Gray) - Edit all settings$($C.Reset)"
     Write-Host ""
 
 } catch {

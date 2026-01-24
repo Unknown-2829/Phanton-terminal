@@ -5,6 +5,27 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-01-24
+
+### Added
+- **Binary Rain Mode** - Choose between Letters or Binary (01) matrix rain
+- **CPU/RAM Usage Bars** - Real-time system stats in dashboard
+- **Typing Effect** - Character-by-character reveal for quotes
+- **Gradient Logo** - Multi-color gradient for logo display
+- **Extended Quotes** - 8 quotes per theme, theme-specific content
+- **Theme-Specific Matrix** - Different characters per theme
+
+### Changed
+- **Fully Automatic Updates** - Downloads silently, shows "Reopen to apply"
+- **Installer Overhaul** - Step-by-step options for all features
+- Themes now have taglines, gradient colors, and custom matrix chars
+
+### Fixed
+- Auto-update now works reliably with proper caching
+- Update notification shows correct status
+
+---
+
 ## [3.1.1] - 2026-01-24
 
 ### Added

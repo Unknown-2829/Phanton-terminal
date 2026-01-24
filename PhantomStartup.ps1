@@ -1,23 +1,20 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - Advanced PowerShell Startup Animation v3.1
+    Phantom Terminal - Advanced PowerShell Startup Animation v3.2
 .DESCRIPTION
-    A fast, cinematic startup animation for Windows Terminal/PowerShell.
-    Features: Multiple themes (Phantom/Unknown), multi-color matrix, security loading,
-    glitch effects, external config, silent auto-update.
+    Cinematic startup animation with multiple themes, effects, and customization.
+    Features: Matrix/Binary rain, typing effects, gradients, CPU/RAM bars, themes.
 .NOTES
     Creator: @unknownlll2829 (Telegram)
     GitHub: https://github.com/Unknown-2829/Phanton-terminal
-    Version: 3.1.0
-.EXAMPLE
-    irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
+    Version: 3.2.0
 #>
 
 # ═══════════════════════════════════════════════════════════════════════════
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.1.0"
+$Script:Version = "3.2.0"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -33,20 +30,31 @@ if (-not (Test-Path $Script:ConfigDir)) {
 # ═══════════════════════════════════════════════════════════════════════════
 
 $Script:DefaultConfig = @{
+    # Animation
     AnimationEnabled   = $true
     MatrixDuration     = 2
+    MatrixMode         = "Letters"    # Letters or Binary
     SecurityLoadSteps  = 8
     GlitchIntensity    = 3
+    
+    # Display
     ShowSystemInfo     = $true
-    Theme              = "Phantom"  # Phantom or Unknown
-    ShowFullPath       = $true      # Show full path in prompt
+    ShowCpuRam         = $true        # Show CPU/RAM usage bars
+    ShowFullPath       = $true
+    TypingEffect       = $true        # Typing effect for quotes
+    GradientText       = $true        # Gradient colors for logo
+    
+    # Theme
+    Theme              = "Phantom"
+    
+    # Updates
     AutoCheckUpdates   = $true
-    SilentUpdate       = $true      # Update silently in background
+    SilentUpdate       = $true
     UpdateCheckDays    = 1
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# THEMES
+# THEMES (Extended)
 # ═══════════════════════════════════════════════════════════════════════════
 
 $Script:Themes = @{
@@ -55,6 +63,7 @@ $Script:Themes = @{
         Primary = "NeonPurple"
         Secondary = "NeonCyan"
         Accent = "HotPink"
+        GradientColors = @("NeonPurple", "NeonCyan", "HotPink")
         Logo = @'
  ____  _   _    _    _   _ _____ ___  __  __ 
 |  _ \| | | |  / \  | \ | |_   _/ _ \|  \/  |
@@ -63,18 +72,25 @@ $Script:Themes = @{
 |_|   |_| |_/_/   \_\_| \_| |_| \___/|_|  |_|
 '@
         Title = "PHANTOM TERMINAL"
+        Tagline = "Ghost in the Machine"
         Quotes = @(
-            'In the shadows, we code.',
+            'In the shadows, we code...',
             'Access denied. Until now.',
             'The system fears what it cannot control.',
-            'We are the ghosts in the machine.'
+            'We are the ghosts in the machine.',
+            'Invisible. Untraceable. Unstoppable.',
+            'Haunting the digital realm...',
+            'Where others see darkness, we see opportunity.',
+            'The phantom never sleeps.'
         )
+        MatrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$'
     }
     Unknown = @{
         Name = "Unknown"
         Primary = "NeonGreen"
         Secondary = "ElectricBlue"
         Accent = "Gold"
+        GradientColors = @("NeonGreen", "ElectricBlue", "Gold")
         Logo = @'
  _   _ _   _ _  ___   _  _____        ___   _ 
 | | | | \ | | |/ / \ | |/ _ \ \      / / \ | |
@@ -83,17 +99,23 @@ $Script:Themes = @{
  \___/|_| \_|_|\_\_| \_|\___/  \_/\_/  |_| \_|
 '@
         Title = "UNKNOWN TERMINAL"
+        Tagline = "Anonymous by Design"
         Quotes = @(
-            'Hidden in plain sight.',
+            'Hidden in plain sight...',
             'Anonymous by design.',
             'The unknown cannot be traced.',
-            'Identity: NULL'
+            'Identity: NULL',
+            'No name. No trace. No limits.',
+            'In anonymity, we trust.',
+            'The best hackers are never known.',
+            'Lost in the noise, found in the code.'
         )
+        MatrixChars = 'UNKNOWN01?_-=+[]{}|;:,./'
     }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CONFIG FILE MANAGEMENT
+# CONFIG MANAGEMENT
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Get-PhantomConfig {
@@ -134,12 +156,12 @@ function Save-PhantomCache {
 
 $Script:Config = Get-PhantomConfig
 
-# Load theme (case-insensitive match)
+# Load theme (case-insensitive)
 $Script:CurrentTheme = $null
 foreach ($key in $Script:Themes.Keys) {
     if ($key -ieq $Script:Config.Theme) {
         $Script:CurrentTheme = $Script:Themes[$key]
-        $Script:Config.Theme = $key  # Normalize case
+        $Script:Config.Theme = $key
         break
     }
 }
@@ -149,52 +171,88 @@ if (-not $Script:CurrentTheme) {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SILENT AUTO-UPDATE (Background Job)
+# AUTO-UPDATE (Fully Automatic)
 # ═══════════════════════════════════════════════════════════════════════════
 
-function Start-SilentUpdateCheck {
-    if (-not $Script:Config.AutoCheckUpdates) { return }
+$Script:UpdateAvailable = $null
+$Script:UpdateDownloaded = $false
+
+function Test-PhantomUpdate {
+    param([switch]$Force)
+    
+    if (-not $Script:Config.AutoCheckUpdates -and -not $Force) { return $null }
     
     $cache = Get-PhantomCache
     $now = Get-Date
     
-    # Check if we need to check
-    if ($cache.LastUpdateCheck) {
+    # Check if we need to check (respect UpdateCheckDays)
+    if (-not $Force -and $cache.LastUpdateCheck) {
         try {
             $lastCheck = [DateTime]::Parse($cache.LastUpdateCheck)
-            if (($now - $lastCheck).TotalDays -lt $Script:Config.UpdateCheckDays) { return }
+            if (($now - $lastCheck).TotalDays -lt $Script:Config.UpdateCheckDays) {
+                # Return cached result
+                if ($cache.UpdateDownloaded) {
+                    $Script:UpdateDownloaded = $true
+                    return $cache.LatestVersion
+                }
+                if ($cache.LatestVersion -and $cache.LatestVersion -gt $Script:Version) {
+                    return $cache.LatestVersion
+                }
+                return $null
+            }
         } catch {}
     }
     
-    # Run update check in background (non-blocking)
-    $updateJob = Start-Job -ScriptBlock {
-        param($RepoOwner, $RepoName, $CurrentVersion, $CacheFile, $InstallPath, $SilentUpdate)
+    # Check GitHub for updates
+    try {
+        $apiUrl = "https://api.github.com/repos/$Script:RepoOwner/$Script:RepoName/releases/latest"
+        $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 3 -ErrorAction Stop
+        $latestVersion = $response.tag_name -replace '^v', ''
         
-        try {
-            $apiUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
-            $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 10 -ErrorAction Stop
-            $latestVersion = $response.tag_name -replace '^v', ''
-            
-            $cache = @{
-                LastUpdateCheck = (Get-Date).ToString("o")
-                LatestVersion = $latestVersion
-                UpdateAvailable = ($latestVersion -gt $CurrentVersion)
+        $cache.LastUpdateCheck = $now.ToString("o")
+        $cache.LatestVersion = $latestVersion
+        
+        if ($latestVersion -gt $Script:Version) {
+            # Auto-download if SilentUpdate enabled
+            if ($Script:Config.SilentUpdate) {
+                try {
+                    $scriptUrl = "https://raw.githubusercontent.com/$Script:RepoOwner/$Script:RepoName/main/PhantomStartup.ps1"
+                    $tempFile = "$env:TEMP\PhantomStartup_new.ps1"
+                    Invoke-WebRequest -Uri $scriptUrl -OutFile $tempFile -UseBasicParsing -TimeoutSec 5
+                    
+                    # Replace script
+                    Copy-Item $tempFile "$HOME\PhantomStartup.ps1" -Force
+                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    
+                    $cache.UpdateDownloaded = $true
+                    $Script:UpdateDownloaded = $true
+                } catch {
+                    $cache.UpdateDownloaded = $false
+                }
             }
-            $cache | ConvertTo-Json | Set-Content $CacheFile -Force
             
-            # Silent update if enabled and update available
-            if ($SilentUpdate -and $latestVersion -gt $CurrentVersion) {
-                $scriptUrl = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/main/PhantomStartup.ps1"
-                Invoke-WebRequest -Uri $scriptUrl -OutFile $InstallPath -UseBasicParsing
-            }
-        } catch {}
-    } -ArgumentList $Script:RepoOwner, $Script:RepoName, $Script:Version, $Script:CacheFile, "$HOME\PhantomStartup.ps1", $Script:Config.SilentUpdate
+            $cache.UpdateAvailable = $true
+            Save-PhantomCache -Cache $cache
+            return $latestVersion
+        } else {
+            $cache.UpdateAvailable = $false
+            $cache.UpdateDownloaded = $false
+            Save-PhantomCache -Cache $cache
+        }
+    } catch {}
     
-    # Don't wait for job - let it run in background
-    Register-ObjectEvent -InputObject $updateJob -EventName StateChanged -Action {
-        Remove-Job -Job $sender -Force
-        Unregister-Event -SubscriptionId $eventsubscriber.SubscriptionId
-    } | Out-Null
+    return $null
+}
+
+function Start-BackgroundUpdateCheck {
+    if (-not $Script:Config.AutoCheckUpdates) { return }
+    
+    # Run update check
+    try {
+        $Script:UpdateAvailable = Test-PhantomUpdate
+    } catch {
+        $Script:UpdateAvailable = $null
+    }
 }
 
 function Update-PhantomTerminal {
@@ -239,11 +297,18 @@ $Script:Colors = @{
     Gray         = "$Script:ESC[38;5;244m"
     DarkGray     = "$Script:ESC[38;5;240m"
     Shadow       = "$Script:ESC[38;5;235m"
+    Yellow       = "$Script:ESC[38;5;226m"
+    Orange       = "$Script:ESC[38;5;208m"
 }
 
-# Get theme colors
 function Get-ThemeColor { param([string]$Type)
     $colorName = $Script:CurrentTheme[$Type]
+    return $Script:Colors[$colorName]
+}
+
+function Get-GradientColor { param([int]$Index)
+    $gradients = $Script:CurrentTheme.GradientColors
+    $colorName = $gradients[$Index % $gradients.Count]
     return $Script:Colors[$colorName]
 }
 
@@ -255,9 +320,11 @@ $Script:Symbols = @{
     Skull = "[X]"; Shield = "[#]"; Lock = "[=]"; Key = "[-]"
     HighVoltage = "[!]"; Bomb = "[O]"; Success = "[+]"; Failure = "[x]"
     Warning = "[!]"; Prompt = ">"; Branch = "~"; Update = "[U]"
+    CPU = "[C]"; RAM = "[R]"; HDD = "[D]"
     HLine = "="; VLine = "|"
     TopLeft = "+"; TopRight = "+"; BottomLeft = "+"; BottomRight = "+"
     TLeft = "+"; TRight = "+"
+    Block = "#"; BlockEmpty = "-"
 }
 
 try {
@@ -266,9 +333,11 @@ try {
             Skull = [char]0x2620; Shield = [char]0x2591; Lock = [char]0x25A0; Key = [char]0x25CF
             HighVoltage = [char]0x26A1; Bomb = [char]0x25C6; Success = [char]0x2714; Failure = [char]0x2718
             Warning = [char]0x26A0; Prompt = [char]0x00BB; Branch = [char]0x2192; Update = [char]0x21BB
+            CPU = [char]0x2699; RAM = [char]0x2630; HDD = [char]0x25A0
             HLine = [char]0x2550; VLine = [char]0x2551
             TopLeft = [char]0x2554; TopRight = [char]0x2557; BottomLeft = [char]0x255A; BottomRight = [char]0x255D
             TLeft = [char]0x2560; TRight = [char]0x2563
+            Block = [char]0x2588; BlockEmpty = [char]0x2591
         }
     }
 } catch {}
@@ -300,6 +369,82 @@ function Write-Centered {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+# TYPING EFFECT
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Write-TypingEffect {
+    param([string]$Text, [string]$Color = $Script:Colors.Gray, [int]$DelayMs = 30)
+    
+    if (-not $Script:Config.TypingEffect) {
+        Write-Host "$Color$Text$($Script:Colors.Reset)" -NoNewline
+        return
+    }
+    
+    foreach ($char in $Text.ToCharArray()) {
+        Write-Host "$Color$char$($Script:Colors.Reset)" -NoNewline
+        Start-Sleep -Milliseconds $DelayMs
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GRADIENT LOGO
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Write-GradientLogo {
+    param([string]$Art)
+    
+    $lines = $Art -split "`n" | Where-Object { $_.Trim() }
+    $size = Get-TerminalSize
+    $maxWidth = ($lines | ForEach-Object { $_.Length } | Measure-Object -Maximum).Maximum
+    $startCol = [Math]::Max(0, [Math]::Floor(($size.Width - $maxWidth) / 2))
+    
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $color = if ($Script:Config.GradientText) { Get-GradientColor -Index $i } else { Get-ThemeColor "Primary" }
+        Write-Host "$(' ' * $startCol)$color$($lines[$i])$($Script:Colors.Reset)"
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CPU/RAM BARS
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Get-SystemStats {
+    $stats = @{ CPU = 0; RAM = 0; RAMUsed = 0; RAMTotal = 0 }
+    
+    try {
+        # CPU (quick sample)
+        $cpu = (Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue).LoadPercentage
+        if ($cpu) { $stats.CPU = $cpu }
+        
+        # RAM
+        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+        if ($os) {
+            $stats.RAMTotal = [Math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
+            $stats.RAMUsed = [Math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / 1MB, 1)
+            $stats.RAM = [Math]::Round(($stats.RAMUsed / $stats.RAMTotal) * 100, 0)
+        }
+    } catch {}
+    
+    return $stats
+}
+
+function Write-UsageBar {
+    param([string]$Label, [int]$Percent, [string]$Color, [int]$Width = 20)
+    
+    $filled = [Math]::Floor($Width * $Percent / 100)
+    $empty = $Width - $filled
+    
+    $bar = "$($Script:Symbols.Block)" * $filled + "$($Script:Symbols.BlockEmpty)" * $empty
+    
+    # Color based on usage
+    $barColor = $Color
+    if ($Percent -gt 80) { $barColor = $Script:Colors.BloodRed }
+    elseif ($Percent -gt 60) { $barColor = $Script:Colors.Orange }
+    
+    Write-Host "  $($Script:Colors.Gray)$Label $($Script:Colors.DarkGray)[$barColor$bar$($Script:Colors.DarkGray)] $($Script:Colors.White)$($Percent.ToString().PadLeft(3))%$($Script:Colors.Reset)"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 # ANIMATIONS
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -309,14 +454,14 @@ function Show-SecurityLoadingBar {
     
     $buffer = New-RenderBuffer
     for ($i = 1; $i -le $Steps; $i++) {
-        $filled = [string]::new([char]0x2588, $i)
-        $empty = [string]::new([char]0x2591, ($Steps - $i))
+        $filled = [string]::new([char]$Script:Symbols.Block, $i)
+        $empty = [string]::new([char]$Script:Symbols.BlockEmpty, ($Steps - $i))
         $percent = [Math]::Floor(($i / $Steps) * 100)
         
         [void]$buffer.Clear()
         Add-ToBuffer $buffer "`r  $($Script:Colors.Gray)$Description $($Script:Colors.DarkGray)[$Color$filled$($Script:Colors.DarkGray)$empty] $($Script:Colors.White)$($percent.ToString().PadLeft(3))%"
         Write-Buffer $buffer
-        Start-Sleep -Milliseconds 30
+        Start-Sleep -Milliseconds 25
     }
     Write-Host " $($Script:Colors.NeonGreen)$($Script:Symbols.Success)$($Script:Colors.Reset)"
 }
@@ -326,9 +471,14 @@ function Show-MultiColorMatrix {
     
     Clear-TerminalScreen
     $size = Get-TerminalSize
-    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     
-    # Theme-based colors
+    # Get chars based on mode
+    $chars = if ($Script:Config.MatrixMode -eq "Binary") {
+        "01"
+    } else {
+        $Script:CurrentTheme.MatrixChars
+    }
+    
     $primary = Get-ThemeColor "Primary"
     $secondary = Get-ThemeColor "Secondary"
     $colorList = @($primary, $secondary, $Script:Colors.NeonCyan, $Script:Colors.ElectricBlue)
@@ -380,7 +530,7 @@ function Show-CoreIgnition {
         Add-ToBuffer $buffer (Move-CursorFast -Row $yPos -Col 1)
         Add-ToBuffer $buffer "$(' ' * $padding)$($Script:Colors.BloodRed)$($Script:Symbols.HighVoltage) $text"
         Write-Buffer $buffer
-        Start-Sleep -Milliseconds 60
+        Start-Sleep -Milliseconds 50
         
         [void]$buffer.Clear()
         Add-ToBuffer $buffer (Move-CursorFast -Row $yPos -Col 1)
@@ -388,9 +538,9 @@ function Show-CoreIgnition {
         Write-Buffer $buffer
         Write-Host ""
         $yPos++
-        Start-Sleep -Milliseconds 30
+        Start-Sleep -Milliseconds 25
     }
-    Start-Sleep -Milliseconds 150
+    Start-Sleep -Milliseconds 100
 }
 
 function Show-GlitchReveal {
@@ -420,20 +570,14 @@ function Show-GlitchReveal {
             $row++
         }
         Write-Buffer $buffer
-        Start-Sleep -Milliseconds 40
+        Start-Sleep -Milliseconds 35
     }
     
-    $row = $startRow
-    foreach ($line in $lines) {
-        [void]$buffer.Clear()
-        Add-ToBuffer $buffer (Move-CursorFast -Row $row -Col $startCol)
-        Add-ToBuffer $buffer "$Color$line$($Script:Colors.Reset)"
-        Write-Buffer $buffer
-        Write-Host ""
-        Start-Sleep -Milliseconds 20
-        $row++
-    }
-    Start-Sleep -Milliseconds 300
+    # Final reveal with gradient
+    Clear-TerminalScreen
+    Write-Host ""
+    Write-GradientLogo -Art $Art
+    Start-Sleep -Milliseconds 200
 }
 
 function Show-SecuritySequence {
@@ -447,7 +591,7 @@ function Show-SecuritySequence {
     @("Initializing AES-256 Encryption", "Generating SHA-512 Hashes", "Activating Firewall Matrix", "Establishing Secure Channel") | ForEach-Object {
         Show-SecurityLoadingBar -Description "$($Script:Symbols.Lock) $_" -Steps $Script:Config.SecurityLoadSteps -Color $primary
     }
-    Start-Sleep -Milliseconds 150
+    Start-Sleep -Milliseconds 100
 }
 
 function Show-Dashboard {
@@ -470,7 +614,16 @@ function Show-Dashboard {
     $indent = " " * $padding
     $hLine = [string]::new([char]$Script:Symbols.HLine, ($boxWidth - 2))
     
+    # Logo with gradient
     Write-Host ""
+    Write-GradientLogo -Art $Script:CurrentTheme.Logo
+    Write-Host ""
+    
+    # Tagline
+    Write-Centered "$($Script:Colors.DarkGray)~ $($Script:CurrentTheme.Tagline) ~$($Script:Colors.Reset)"
+    Write-Host ""
+    
+    # Box
     Write-Host "$indent$primary$($Script:Symbols.TopLeft)$hLine$($Script:Symbols.TopRight)$($Script:Colors.Reset)"
     
     $title = "$($Script:Symbols.Skull) $($Script:CurrentTheme.Title) v$Script:Version $($Script:Symbols.Skull)"
@@ -479,12 +632,12 @@ function Show-Dashboard {
     
     Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
+    # System info
     @(
         @{ L = "Operator"; V = $user; C = $Script:Colors.NeonGreen },
         @{ L = "Host"; V = $computer; C = $Script:Colors.Gold },
         @{ L = "System"; V = $os; C = $Script:Colors.Gold },
         @{ L = "Uptime"; V = $uptime; C = $Script:Colors.NeonCyan },
-        @{ L = "Theme"; V = $Script:CurrentTheme.Name; C = $secondary },
         @{ L = "Time"; V = $datetime; C = $Script:Colors.NeonCyan }
     ) | ForEach-Object {
         $content = "  $($_.L): $($_.C)$($_.V)$($Script:Colors.White)"
@@ -493,14 +646,34 @@ function Show-Dashboard {
         Write-Host "$indent$primary$($Script:Symbols.VLine)$($Script:Colors.White)$content$(' ' * $rightPad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
     }
     
-    Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
-    
-    $quote = $Script:CurrentTheme.Quotes[(Get-Random -Max $Script:CurrentTheme.Quotes.Count)]
-    $quotePad = [Math]::Max(0, $boxWidth - $quote.Length - 4)
-    Write-Host "$indent$primary$($Script:Symbols.VLine) $($Script:Colors.Gray)$quote$(' ' * $quotePad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
-    
     Write-Host "$indent$primary$($Script:Symbols.BottomLeft)$hLine$($Script:Symbols.BottomRight)$($Script:Colors.Reset)"
     Write-Host ""
+    
+    # CPU/RAM bars
+    if ($Script:Config.ShowCpuRam) {
+        $stats = Get-SystemStats
+        Write-UsageBar -Label "$($Script:Symbols.CPU) CPU" -Percent $stats.CPU -Color $secondary
+        Write-UsageBar -Label "$($Script:Symbols.RAM) RAM" -Percent $stats.RAM -Color $primary
+        Write-Host ""
+    }
+    
+    # Quote with typing effect
+    $quote = $Script:CurrentTheme.Quotes[(Get-Random -Max $Script:CurrentTheme.Quotes.Count)]
+    Write-Host "$indent$($Script:Colors.DarkGray)" -NoNewline
+    Write-TypingEffect -Text "  `"$quote`"" -Color $Script:Colors.Gray -DelayMs 20
+    Write-Host "$($Script:Colors.Reset)"
+    Write-Host ""
+    
+    # Update notification
+    if ($Script:UpdateAvailable) {
+        if ($Script:UpdateDownloaded) {
+            Write-Host "$indent$($Script:Colors.NeonGreen)$($Script:Symbols.Update) Updated to v$Script:UpdateAvailable! Reopen terminal to apply.$($Script:Colors.Reset)"
+        } else {
+            Write-Host "$indent$($Script:Colors.Gold)$($Script:Symbols.Update) Update v$Script:UpdateAvailable available (run 'phantom-update')$($Script:Colors.Reset)"
+        }
+        Write-Host ""
+    }
+    
     Write-Host "$indent$($Script:Colors.DarkGray)Type 'phantom-help' for commands.$($Script:Colors.Reset)"
     Write-Host ""
 }
@@ -510,8 +683,8 @@ function Show-Dashboard {
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Start-PhantomTerminal {
-    # Start silent update check in background
-    Start-SilentUpdateCheck
+    # Check for updates (quick)
+    Start-BackgroundUpdateCheck
     
     if (-not $Script:Config.AnimationEnabled) { Show-Dashboard; return }
     
@@ -536,7 +709,6 @@ function Set-PhantomPrompt {
     function global:prompt {
         $lastSuccess = $?
         
-        # Full path or folder name based on config
         if ($Script:Config.ShowFullPath) {
             $pathDisplay = (Get-Location).Path
         } else {
@@ -570,7 +742,7 @@ function global:phantom-help {
     Write-Host "$($Script:Colors.NeonCyan)=== $($Script:CurrentTheme.Title) v$Script:Version ===$($Script:Colors.Reset)"
     Write-Host ""
     Write-Host "  $($Script:Colors.Gold)phantom-reload$($Script:Colors.White)  - Replay animation$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-theme$($Script:Colors.White)   - Switch theme (Phantom/Unknown)$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)phantom-theme$($Script:Colors.White)   - Switch theme$($Script:Colors.Reset)"
     Write-Host "  $($Script:Colors.Gold)phantom-config$($Script:Colors.White)  - Show/edit config$($Script:Colors.Reset)"
     Write-Host "  $($Script:Colors.Gold)phantom-matrix$($Script:Colors.White)  - Matrix animation$($Script:Colors.Reset)"
     Write-Host "  $($Script:Colors.Gold)phantom-dash$($Script:Colors.White)    - Show dashboard$($Script:Colors.Reset)"
@@ -602,13 +774,9 @@ function global:phantom-theme {
         return
     }
     
-    # Case-insensitive theme match
     $matchedKey = $null
     foreach ($key in $Script:Themes.Keys) {
-        if ($key -ieq $ThemeName) {
-            $matchedKey = $key
-            break
-        }
+        if ($key -ieq $ThemeName) { $matchedKey = $key; break }
     }
     
     if ($matchedKey) {
