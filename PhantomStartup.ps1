@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.2"
+$Script:Version = "3.2.3"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -114,43 +114,71 @@ $Script:Themes = @{
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CONFIG MANAGEMENT
+# CONFIG MANAGEMENT (PowerShell 5.1+ compatible)
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Get-PhantomConfig {
-    try {
-        if (Test-Path $Script:ConfigFile) {
-            $loaded = Get-Content $Script:ConfigFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction SilentlyContinue
-            if ($loaded) {
-                $config = $Script:DefaultConfig.Clone()
-                foreach ($key in $loaded.Keys) {
-                    if ($config.ContainsKey($key)) { $config[$key] = $loaded[$key] }
-                }
-                return $config
-            }
+    $config = $Script:DefaultConfig.Clone()
+    
+    if (Test-Path $Script:ConfigFile) {
+        try {
+            $json = Get-Content $Script:ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            
+            # Manually copy each property (PS5.1 compatible)
+            if ($null -ne $json.AnimationEnabled) { $config.AnimationEnabled = $json.AnimationEnabled }
+            if ($null -ne $json.MatrixDuration) { $config.MatrixDuration = $json.MatrixDuration }
+            if ($json.MatrixMode) { $config.MatrixMode = $json.MatrixMode }
+            if ($null -ne $json.SecurityLoadSteps) { $config.SecurityLoadSteps = $json.SecurityLoadSteps }
+            if ($null -ne $json.GlitchIntensity) { $config.GlitchIntensity = $json.GlitchIntensity }
+            if ($null -ne $json.ShowSystemInfo) { $config.ShowSystemInfo = $json.ShowSystemInfo }
+            if ($null -ne $json.ShowFullPath) { $config.ShowFullPath = $json.ShowFullPath }
+            if ($null -ne $json.GradientText) { $config.GradientText = $json.GradientText }
+            if ($json.Theme) { $config.Theme = $json.Theme }
+            if ($null -ne $json.AutoCheckUpdates) { $config.AutoCheckUpdates = $json.AutoCheckUpdates }
+            if ($null -ne $json.SilentUpdate) { $config.SilentUpdate = $json.SilentUpdate }
+            if ($null -ne $json.UpdateCheckDays) { $config.UpdateCheckDays = $json.UpdateCheckDays }
+            
+            return $config
+        } catch {
+            # Config file corrupted, use defaults
         }
-    } catch {}
-    Save-PhantomConfig -Config $Script:DefaultConfig
-    return $Script:DefaultConfig
+    }
+    
+    # Save defaults if no config exists
+    Save-PhantomConfig -Config $config
+    return $config
 }
 
 function Save-PhantomConfig {
     param([hashtable]$Config)
-    try { $Config | ConvertTo-Json -Depth 3 | Set-Content $Script:ConfigFile -Force -Encoding UTF8 } catch {}
+    try {
+        if (-not (Test-Path $Script:ConfigDir)) {
+            New-Item -ItemType Directory -Path $Script:ConfigDir -Force | Out-Null
+        }
+        $Config | ConvertTo-Json -Depth 3 | Out-File $Script:ConfigFile -Encoding UTF8 -Force
+    } catch {}
 }
 
 function Get-PhantomCache {
-    try {
-        if (Test-Path $Script:CacheFile) {
-            return Get-Content $Script:CacheFile -Raw | ConvertFrom-Json -AsHashtable -ErrorAction SilentlyContinue
-        }
-    } catch {}
-    return @{ LastUpdateCheck = $null; LatestVersion = $null; UpdateAvailable = $false }
+    if (Test-Path $Script:CacheFile) {
+        try {
+            $json = Get-Content $Script:CacheFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+            return @{
+                LastUpdateCheck = $json.LastUpdateCheck
+                LatestVersion = $json.LatestVersion
+                UpdateAvailable = $json.UpdateAvailable
+                UpdateDownloaded = $json.UpdateDownloaded
+            }
+        } catch {}
+    }
+    return @{ LastUpdateCheck = $null; LatestVersion = $null; UpdateAvailable = $false; UpdateDownloaded = $false }
 }
 
 function Save-PhantomCache {
     param([hashtable]$Cache)
-    try { $Cache | ConvertTo-Json | Set-Content $Script:CacheFile -Force -Encoding UTF8 } catch {}
+    try {
+        $Cache | ConvertTo-Json | Out-File $Script:CacheFile -Encoding UTF8 -Force
+    } catch {}
 }
 
 $Script:Config = Get-PhantomConfig

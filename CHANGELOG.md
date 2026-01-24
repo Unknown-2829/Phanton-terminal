@@ -5,6 +5,16 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3] - 2026-01-24
+
+### Fixed
+- **PowerShell 5.1 compatibility** - Config loading now works on all PS versions
+- Removed `-AsHashtable` parameter (requires PS6+)
+- Config properties now explicitly copied for reliability
+- Using `Out-File` for consistent UTF8 encoding
+
+---
+
 ## [3.2.2] - 2026-01-24
 
 ### Changed
