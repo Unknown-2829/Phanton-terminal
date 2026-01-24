@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - Installer v3.2
+    Phantom Terminal - Installer v3.2.1
 .DESCRIPTION
     Interactive installer with theme and effect options.
+    On reinstall: loads previous config as defaults, asks for new choices.
     Run: irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
 #>
 
@@ -21,29 +22,47 @@ $C = @{
     Reset = "$ESC[0m"
 }
 
+# Load existing config if reinstalling
+$existingConfig = $null
+if (Test-Path $ConfigFile) {
+    try {
+        $existingConfig = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+    } catch {}
+}
+
+# Defaults (from existing config or fresh)
+$defaults = @{
+    Theme = if ($existingConfig.Theme) { $existingConfig.Theme } else { "Phantom" }
+    MatrixMode = if ($existingConfig.MatrixMode) { $existingConfig.MatrixMode } else { "Letters" }
+    ShowFullPath = if ($null -ne $existingConfig.ShowFullPath) { $existingConfig.ShowFullPath } else { $true }
+    GradientText = if ($null -ne $existingConfig.GradientText) { $existingConfig.GradientText } else { $true }
+    AutoCheckUpdates = if ($null -ne $existingConfig.AutoCheckUpdates) { $existingConfig.AutoCheckUpdates } else { $true }
+}
+
 function Show-Header {
     Clear-Host
     Write-Host ""
     Write-Host "$($C.Purple)  ╔══════════════════════════════════════════════════════╗$($C.Reset)"
-    Write-Host "$($C.Purple)  ║$($C.Cyan)        PHANTOM TERMINAL INSTALLER v3.2           $($C.Purple)║$($C.Reset)"
+    Write-Host "$($C.Purple)  ║$($C.Cyan)        PHANTOM TERMINAL INSTALLER v3.2.1          $($C.Purple)║$($C.Reset)"
     Write-Host "$($C.Purple)  ║$($C.Gray)        github.com/Unknown-2829/Phanton-terminal  $($C.Purple)║$($C.Reset)"
     Write-Host "$($C.Purple)  ╚══════════════════════════════════════════════════════╝$($C.Reset)"
     Write-Host ""
 }
 
 function Show-Option {
-    param([string]$Num, [string]$Name, [string]$Desc, [string]$Color = $C.White)
-    Write-Host "  $Color[$Num] $Name$($C.Reset)"
-    Write-Host "      $($C.Gray)$Desc$($C.Reset)"
+    param([string]$Num, [string]$Name, [string]$Desc, [string]$Color = $C.White, [bool]$IsDefault = $false)
+    $marker = if ($IsDefault) { "$($C.Green)*$($C.Reset)" } else { " " }
+    Write-Host "  $marker $Color[$Num] $Name$($C.Reset)"
+    Write-Host "       $($C.Gray)$Desc$($C.Reset)"
 }
 
 # Main
 Show-Header
 
-# Clean previous
+# Clean previous script (keep config!)
 $isReinstall = Test-Path $InstallPath
 if ($isReinstall) {
-    Write-Host "  $($C.Gold)[*]$($C.Gray) Cleaning previous installation...$($C.Reset)"
+    Write-Host "  $($C.Gold)[*]$($C.Gray) Reinstalling (keeping your preferences as defaults)...$($C.Reset)"
     Remove-Item $InstallPath -Force -ErrorAction SilentlyContinue
     if (Test-Path $PROFILE) {
         $content = Get-Content $PROFILE -Raw -ErrorAction SilentlyContinue
@@ -51,7 +70,7 @@ if ($isReinstall) {
             ($content -split "`n" | Where-Object { $_ -notmatch 'PhantomStartup' -and $_ -notmatch 'Phantom Terminal' }) -join "`n" | Set-Content $PROFILE -Force
         }
     }
-    Write-Host "  $($C.Green)[+]$($C.White) Previous version removed$($C.Reset)"
+    Write-Host "  $($C.Green)[+]$($C.White) Ready for reinstall$($C.Reset)"
     Write-Host ""
 }
 
@@ -61,12 +80,14 @@ if ($isReinstall) {
 
 Write-Host "  $($C.Gold)═══ STEP 1: SELECT THEME ═══$($C.Reset)"
 Write-Host ""
-Show-Option -Num "1" -Name "PHANTOM" -Desc "Purple/Cyan neon • Ghost in the machine" -Color $C.Purple
+Show-Option -Num "1" -Name "PHANTOM" -Desc "Purple/Cyan neon" -Color $C.Purple -IsDefault ($defaults.Theme -eq "Phantom")
 Write-Host ""
-Show-Option -Num "2" -Name "UNKNOWN" -Desc "Green/Blue neon • Anonymous by design" -Color $C.Green
+Show-Option -Num "2" -Name "UNKNOWN" -Desc "Green/Blue neon" -Color $C.Green -IsDefault ($defaults.Theme -eq "Unknown")
 Write-Host ""
-Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$defaultThemeNum = if ($defaults.Theme -eq "Unknown") { "2" } else { "1" }
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2, Enter=$defaultThemeNum]$($C.White): $($C.Reset)" -NoNewline
 $themeChoice = Read-Host
+if (-not $themeChoice) { $themeChoice = $defaultThemeNum }
 $selectedTheme = if ($themeChoice -eq "2") { "Unknown" } else { "Phantom" }
 Write-Host "  $($C.Green)[+]$($C.White) Theme: $selectedTheme$($C.Reset)"
 Write-Host ""
@@ -77,12 +98,14 @@ Write-Host ""
 
 Write-Host "  $($C.Gold)═══ STEP 2: MATRIX RAIN MODE ═══$($C.Reset)"
 Write-Host ""
-Show-Option -Num "1" -Name "Letters" -Desc "Classic letter rain (ABCDEF...)" -Color $C.Cyan
+Show-Option -Num "1" -Name "Letters" -Desc "Classic (ABCDEF...)" -Color $C.Cyan -IsDefault ($defaults.MatrixMode -eq "Letters")
 Write-Host ""
-Show-Option -Num "2" -Name "Binary" -Desc "Binary rain (0101...)" -Color $C.Green
+Show-Option -Num "2" -Name "Binary" -Desc "Binary (0101...)" -Color $C.Green -IsDefault ($defaults.MatrixMode -eq "Binary")
 Write-Host ""
-Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$defaultMatrixNum = if ($defaults.MatrixMode -eq "Binary") { "2" } else { "1" }
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2, Enter=$defaultMatrixNum]$($C.White): $($C.Reset)" -NoNewline
 $matrixChoice = Read-Host
+if (-not $matrixChoice) { $matrixChoice = $defaultMatrixNum }
 $matrixMode = if ($matrixChoice -eq "2") { "Binary" } else { "Letters" }
 Write-Host "  $($C.Green)[+]$($C.White) Matrix: $matrixMode$($C.Reset)"
 Write-Host ""
@@ -93,12 +116,14 @@ Write-Host ""
 
 Write-Host "  $($C.Gold)═══ STEP 3: PROMPT PATH DISPLAY ═══$($C.Reset)"
 Write-Host ""
-Show-Option -Num "1" -Name "Full Path" -Desc "Show complete path (C:\Users\Name\Projects)" -Color $C.Cyan
+Show-Option -Num "1" -Name "Full Path" -Desc "C:\Users\Name\Projects" -Color $C.Cyan -IsDefault $defaults.ShowFullPath
 Write-Host ""
-Show-Option -Num "2" -Name "Folder Only" -Desc "Show folder name only (Projects)" -Color $C.Blue
+Show-Option -Num "2" -Name "Folder Only" -Desc "Projects" -Color $C.Blue -IsDefault (-not $defaults.ShowFullPath)
 Write-Host ""
-Write-Host "  $($C.White)Choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$defaultPathNum = if ($defaults.ShowFullPath) { "1" } else { "2" }
+Write-Host "  $($C.White)Choice $($C.Gray)[1/2, Enter=$defaultPathNum]$($C.White): $($C.Reset)" -NoNewline
 $pathChoice = Read-Host
+if (-not $pathChoice) { $pathChoice = $defaultPathNum }
 $showFullPath = $pathChoice -ne "2"
 Write-Host "  $($C.Green)[+]$($C.White) Path: $(if ($showFullPath) { 'Full' } else { 'Folder only' })$($C.Reset)"
 Write-Host ""
@@ -111,14 +136,18 @@ Write-Host "  $($C.Gold)═══ STEP 4: OPTIONS ═══$($C.Reset)"
 Write-Host ""
 
 # Gradient
-Write-Host "  $($C.White)Gradient colors for logo? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$gradientDefault = if ($defaults.GradientText) { "Y" } else { "n" }
+Write-Host "  $($C.White)Gradient colors for logo? $($C.Gray)[Y/n, Enter=$gradientDefault]$($C.White): $($C.Reset)" -NoNewline
 $gradientChoice = Read-Host
+if (-not $gradientChoice) { $gradientChoice = $gradientDefault }
 $gradientText = $gradientChoice -ne "n" -and $gradientChoice -ne "N"
 Write-Host "  $($C.Green)[+]$($C.White) Gradient: $(if ($gradientText) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
 
 # Auto Update
-Write-Host "  $($C.White)Enable auto-update? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
+$autoDefault = if ($defaults.AutoCheckUpdates) { "Y" } else { "n" }
+Write-Host "  $($C.White)Enable auto-update? $($C.Gray)[Y/n, Enter=$autoDefault]$($C.White): $($C.Reset)" -NoNewline
 $autoUpdateChoice = Read-Host
+if (-not $autoUpdateChoice) { $autoUpdateChoice = $autoDefault }
 $autoUpdate = $autoUpdateChoice -ne "n" -and $autoUpdateChoice -ne "N"
 Write-Host "  $($C.Green)[+]$($C.White) Auto-update: $(if ($autoUpdate) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
 Write-Host ""
