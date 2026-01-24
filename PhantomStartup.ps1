@@ -39,9 +39,7 @@ $Script:DefaultConfig = @{
     
     # Display
     ShowSystemInfo     = $true
-    ShowCpuRam         = $true        # Show CPU/RAM usage bars
     ShowFullPath       = $true
-    TypingEffect       = $true        # Typing effect for quotes
     GradientText       = $true        # Gradient colors for logo
     
     # Theme
@@ -620,10 +618,6 @@ function Show-Dashboard {
     Write-GradientLogo -Art $Script:CurrentTheme.Logo
     Write-Host ""
     
-    # Tagline
-    Write-Centered "$($Script:Colors.DarkGray)~ $($Script:CurrentTheme.Tagline) ~$($Script:Colors.Reset)"
-    Write-Host ""
-    
     # Box
     Write-Host "$indent$primary$($Script:Symbols.TopLeft)$hLine$($Script:Symbols.TopRight)$($Script:Colors.Reset)"
     
@@ -647,22 +641,14 @@ function Show-Dashboard {
         Write-Host "$indent$primary$($Script:Symbols.VLine)$($Script:Colors.White)$content$(' ' * $rightPad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
     }
     
-    Write-Host "$indent$primary$($Script:Symbols.BottomLeft)$hLine$($Script:Symbols.BottomRight)$($Script:Colors.Reset)"
-    Write-Host ""
+    Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
-    # CPU/RAM bars
-    if ($Script:Config.ShowCpuRam) {
-        $stats = Get-SystemStats
-        Write-UsageBar -Label "$($Script:Symbols.CPU) CPU" -Percent $stats.CPU -Color $secondary
-        Write-UsageBar -Label "$($Script:Symbols.RAM) RAM" -Percent $stats.RAM -Color $primary
-        Write-Host ""
-    }
-    
-    # Quote with typing effect
+    # Quote inside box
     $quote = $Script:CurrentTheme.Quotes[(Get-Random -Max $Script:CurrentTheme.Quotes.Count)]
-    Write-Host "$indent$($Script:Colors.DarkGray)" -NoNewline
-    Write-TypingEffect -Text "  `"$quote`"" -Color $Script:Colors.Gray -DelayMs 20
-    Write-Host "$($Script:Colors.Reset)"
+    $quotePad = [Math]::Max(0, $boxWidth - $quote.Length - 4)
+    Write-Host "$indent$primary$($Script:Symbols.VLine) $($Script:Colors.Gray)$quote$(' ' * $quotePad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+    
+    Write-Host "$indent$primary$($Script:Symbols.BottomLeft)$hLine$($Script:Symbols.BottomRight)$($Script:Colors.Reset)"
     Write-Host ""
     
     # Update notification

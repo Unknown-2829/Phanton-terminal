@@ -32,9 +32,8 @@ function Show-Header {
 }
 
 function Show-Option {
-    param([string]$Num, [string]$Name, [string]$Desc, [string]$Color = $C.White, [bool]$Selected = $false)
-    $marker = if ($Selected) { "$($C.Green)>>$($C.Reset)" } else { "  " }
-    Write-Host "  $marker $Color[$Num] $Name$($C.Reset)"
+    param([string]$Num, [string]$Name, [string]$Desc, [string]$Color = $C.White)
+    Write-Host "  $Color[$Num] $Name$($C.Reset)"
     Write-Host "      $($C.Gray)$Desc$($C.Reset)"
 }
 
@@ -105,23 +104,11 @@ Write-Host "  $($C.Green)[+]$($C.White) Path: $(if ($showFullPath) { 'Full' } el
 Write-Host ""
 
 # ═══════════════════════════════════════════════════════════════════════════
-# OPTION 4: Effects
+# OPTION 4: Gradient & Auto-update
 # ═══════════════════════════════════════════════════════════════════════════
 
-Write-Host "  $($C.Gold)═══ STEP 4: VISUAL EFFECTS ═══$($C.Reset)"
+Write-Host "  $($C.Gold)═══ STEP 4: OPTIONS ═══$($C.Reset)"
 Write-Host ""
-
-# CPU/RAM
-Write-Host "  $($C.White)Show CPU/RAM usage bars? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
-$cpuRamChoice = Read-Host
-$showCpuRam = $cpuRamChoice -ne "n" -and $cpuRamChoice -ne "N"
-Write-Host "  $($C.Green)[+]$($C.White) CPU/RAM bars: $(if ($showCpuRam) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
-
-# Typing Effect
-Write-Host "  $($C.White)Typing effect for quotes? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
-$typingChoice = Read-Host
-$typingEffect = $typingChoice -ne "n" -and $typingChoice -ne "N"
-Write-Host "  $($C.Green)[+]$($C.White) Typing effect: $(if ($typingEffect) { 'Enabled' } else { 'Disabled' })$($C.Reset)"
 
 # Gradient
 Write-Host "  $($C.White)Gradient colors for logo? $($C.Gray)[Y/n]$($C.White): $($C.Reset)" -NoNewline
@@ -167,9 +154,7 @@ try {
         SecurityLoadSteps = 8
         GlitchIntensity = 3
         ShowSystemInfo = $true
-        ShowCpuRam = $showCpuRam
         ShowFullPath = $showFullPath
-        TypingEffect = $typingEffect
         GradientText = $gradientText
         Theme = $selectedTheme
         AutoCheckUpdates = $autoUpdate
@@ -187,7 +172,6 @@ try {
     Write-Host ""
     Write-Host "  $($C.Gold)Your Settings:$($C.Reset)"
     Write-Host "    Theme: $selectedTheme | Matrix: $matrixMode | Path: $(if ($showFullPath) {'Full'} else {'Folder'})"
-    Write-Host "    CPU/RAM: $(if ($showCpuRam) {'Yes'} else {'No'}) | Typing: $(if ($typingEffect) {'Yes'} else {'No'}) | Gradient: $(if ($gradientText) {'Yes'} else {'No'})"
     Write-Host ""
     Write-Host "  $($C.Gold)Commands:$($C.Reset)"
     Write-Host "    $($C.White)phantom-help$($C.Gray)   - All commands$($C.Reset)"
