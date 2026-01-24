@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.7"
+$Script:Version = "3.2.8"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -690,7 +690,8 @@ function Show-Dashboard {
         Write-Host ""
     }
     
-    Write-Host "$indent$($Script:Colors.DarkGray)Type '$($Script:Colors.Gold)phantom-help$($Script:Colors.DarkGray)' for commands.$($Script:Colors.Reset)"
+    $helpCmd = if ($Script:CurrentTheme.Name -eq "Unknown") { "unknown-help" } else { "phantom-help" }
+    Write-Host "$indent$($Script:Colors.DarkGray)Type '$($Script:Colors.Gold)$helpCmd$($Script:Colors.DarkGray)' for commands.$($Script:Colors.Reset)"
     Write-Host ""
 }
 
@@ -800,17 +801,27 @@ function global:phantom-dash { Show-Dashboard }
 function global:phantom-update { Update-PhantomTerminal }
 
 function global:phantom-help {
+    $prefix = if ($Script:CurrentTheme.Name -eq "Unknown") { "unknown" } else { "phantom" }
     Write-Host ""
     Write-Host "$($Script:Colors.NeonCyan)=== $($Script:CurrentTheme.Title) v$Script:Version ===$($Script:Colors.Reset)"
     Write-Host ""
-    Write-Host "  $($Script:Colors.Gold)phantom-reload$($Script:Colors.White)  - Replay animation$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-theme$($Script:Colors.White)   - Switch theme$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-config$($Script:Colors.White)  - Show/edit config$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-matrix$($Script:Colors.White)  - Matrix animation$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-dash$($Script:Colors.White)    - Show dashboard$($Script:Colors.Reset)"
-    Write-Host "  $($Script:Colors.Gold)phantom-update$($Script:Colors.White)  - Check updates$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-reload$($Script:Colors.White)  - Replay animation$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-theme$($Script:Colors.White)   - Switch theme$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-config$($Script:Colors.White)  - Show/edit config$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-matrix$($Script:Colors.White)  - Matrix animation$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-dash$($Script:Colors.White)    - Show dashboard$($Script:Colors.Reset)"
+    Write-Host "  $($Script:Colors.Gold)$prefix-update$($Script:Colors.White)  - Check updates$($Script:Colors.Reset)"
     Write-Host ""
 }
+
+# Unknown theme aliases
+function global:unknown-help { phantom-help }
+function global:unknown-reload { Start-PhantomTerminal }
+function global:unknown-theme { param([string]$ThemeName) phantom-theme $ThemeName }
+function global:unknown-matrix { Show-MultiColorMatrix -DurationSeconds $Script:Config.MatrixDuration }
+function global:unknown-dash { Show-Dashboard }
+function global:unknown-update { Update-PhantomTerminal }
+function global:unknown-config { param([switch]$Edit) if ($Edit) { notepad $Script:ConfigFile } else { phantom-config } }
 
 function global:phantom-config {
     param([switch]$Edit)
