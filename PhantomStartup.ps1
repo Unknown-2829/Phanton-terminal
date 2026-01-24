@@ -39,6 +39,7 @@ $Script:DefaultConfig = @{
     GlitchIntensity    = 3
     ShowSystemInfo     = $true
     Theme              = "Phantom"  # Phantom or Unknown
+    ShowFullPath       = $true      # Show full path in prompt
     AutoCheckUpdates   = $true
     SilentUpdate       = $true      # Update silently in background
     UpdateCheckDays    = 1
@@ -534,8 +535,14 @@ function Start-PhantomTerminal {
 function Set-PhantomPrompt {
     function global:prompt {
         $lastSuccess = $?
-        $folder = Split-Path (Get-Location).Path -Leaf
-        if (-not $folder) { $folder = (Get-Location).Path }
+        
+        # Full path or folder name based on config
+        if ($Script:Config.ShowFullPath) {
+            $pathDisplay = (Get-Location).Path
+        } else {
+            $pathDisplay = Split-Path (Get-Location).Path -Leaf
+            if (-not $pathDisplay) { $pathDisplay = (Get-Location).Path }
+        }
         
         $gitBranch = ""
         if (Test-Path .git -ErrorAction SilentlyContinue) {
@@ -545,7 +552,7 @@ function Set-PhantomPrompt {
         $status = if ($lastSuccess) { "$($Script:Colors.NeonGreen)$($Script:Symbols.Success)" } else { "$($Script:Colors.BloodRed)$($Script:Symbols.Failure)" }
         $primary = Get-ThemeColor "Primary"
         
-        "$primary$env:USERNAME$($Script:Colors.DarkGray)@$($Script:Colors.NeonCyan)$folder$gitBranch$($Script:Colors.Reset)`n$status $primary$($Script:Symbols.Prompt)$($Script:Colors.Reset) "
+        "$primary$env:USERNAME$($Script:Colors.DarkGray)@$($Script:Colors.NeonCyan)$pathDisplay$gitBranch$($Script:Colors.Reset)`n$status $primary$($Script:Symbols.Prompt)$($Script:Colors.Reset) "
     }
 }
 

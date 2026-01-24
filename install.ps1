@@ -129,12 +129,30 @@ if ($input -eq "2") {
 
 $selectedTheme = if ($selected -eq 0) { "Phantom" } else { "Unknown" }
 
+# Path Display Option
+Write-Host ""
+Write-Host "  $($C.Gold)PROMPT PATH DISPLAY$($C.Reset)"
+Write-Host "  $($C.Gray)[1] Full path   (C:\Users\Name\Projects)$($C.Reset)"
+Write-Host "  $($C.Gray)[2] Folder only (Projects)$($C.Reset)"
+Write-Host ""
+Write-Host "  $($C.White)Your choice $($C.Gray)[1/2]$($C.White): $($C.Reset)" -NoNewline
+$pathChoice = Read-Host
+
+$showFullPath = $true
+if ($pathChoice -eq "2") {
+    $showFullPath = $false
+    Write-Host "  $($C.Green)[+]$($C.White) Path display: $($C.Cyan)Folder only$($C.Reset)"
+} else {
+    Write-Host "  $($C.Green)[+]$($C.White) Path display: $($C.Cyan)Full path$($C.Reset)"
+}
+
 Show-Header
 if ($selected -eq 0) {
     Write-Host "  $($C.Green)[+]$($C.White) Theme: $($C.Purple)PHANTOM$($C.Reset)"
 } else {
     Write-Host "  $($C.Green)[+]$($C.White) Theme: $($C.Green)UNKNOWN$($C.Reset)"
 }
+Write-Host "  $($C.Green)[+]$($C.White) Path: $(if ($showFullPath) { 'Full path' } else { 'Folder only' })$($C.Reset)"
 Write-Host ""
 
 try {
@@ -156,6 +174,7 @@ try {
     @{
         AnimationEnabled = $true; MatrixDuration = 2; SecurityLoadSteps = 8
         GlitchIntensity = 3; ShowSystemInfo = $true; Theme = $selectedTheme
+        ShowFullPath = $showFullPath
         AutoCheckUpdates = $true; SilentUpdate = $true; UpdateCheckDays = 1
     } | ConvertTo-Json | Set-Content $ConfigFile -Force
     Write-Host "  $($C.Green)[+]$($C.White) Config saved$($C.Reset)"
