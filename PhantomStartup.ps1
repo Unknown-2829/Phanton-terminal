@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.5"
+$Script:Version = "3.2.6"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -90,12 +90,12 @@ $Script:Themes = @{
         Accent = "Gold"
         GradientColors = @("NeonGreen", "ElectricBlue", "Gold")
         Logo = @'
- ##  ##  ##   ##  ##  ##  #####   ##   ##  ##   ##
- ##  ##  ###  ##  ## ##   ##  ##  ##   ##  ###  ##
- ##  ##  #### ##  ####    ##  ##  ##   ##  #### ##
- ##  ##  ## ####  ####    ##  ##  ##   ##  ## ####
- ##  ##  ##  ###  ## ##   ##  ##  ##   ##  ##  ###
-  ####   ##   ##  ##  ##  #####    #####   ##   ##
+ ##  ##  ##   ##  ##  ##  ##   ##   ####   ##   ##  ##   ##
+ ##  ##  ###  ##  ## ##   ###  ##  ##  ##  ##   ##  ###  ##
+ ##  ##  #### ##  ####    #### ##  ##  ##  ## # ##  #### ##
+ ##  ##  ## ####  ###     ## ####  ##  ##  ## # ##  ## ####
+ ##  ##  ##  ###  ## ##   ##  ###  ##  ##  ###  ##  ##  ###
+  ####   ##   ##  ##  ##  ##   ##   ####    ## ##   ##   ##
 '@
         Title = "UNKNOWN TERMINAL"
         Tagline = "Anonymous by Design"
