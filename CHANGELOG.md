@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.1] - 2026-01-24
 
+### Added
+- **ShowFullPath option** - Choose full path or folder name in prompt
+- Path display selection during installation
+
 ### Fixed
 - Theme now persists correctly across terminal restarts
 - Case-insensitive theme matching (unknown/Unknown both work)
