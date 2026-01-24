@@ -20,7 +20,7 @@ $Blue = "$E[38;5;39m"; $Gold = "$E[38;5;220m"; $Red = "$E[38;5;196m"
 $White = "$E[1;37m"; $Gray = "$E[38;5;244m"; $DGray = "$E[38;5;240m"; $R = "$E[0m"
 
 # Fast config load
-$cfg = @{ Theme = "Phantom"; MatrixMode = "Letters"; ShowFullPath = $true; GradientText = $true; AutoCheckUpdates = $true }
+$cfg = @{ Theme = "Phantom"; MatrixMode = "Letters"; ShowFullPath = $true; GradientText = $true; AutoCheckUpdates = $true; ShowSystemInfo = $true }
 if (Test-Path $ConfigFile) {
     try {
         $json = Get-Content $ConfigFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
@@ -29,6 +29,7 @@ if (Test-Path $ConfigFile) {
         if ($null -ne $json.ShowFullPath) { $cfg.ShowFullPath = $json.ShowFullPath }
         if ($null -ne $json.GradientText) { $cfg.GradientText = $json.GradientText }
         if ($null -ne $json.AutoCheckUpdates) { $cfg.AutoCheckUpdates = $json.AutoCheckUpdates }
+        if ($null -ne $json.ShowSystemInfo) { $cfg.ShowSystemInfo = $json.ShowSystemInfo }
     } catch {}
 }
 
@@ -86,6 +87,12 @@ Write-Host "  ${Green}→ $(if ($ShowFullPath) {'Full path'} else {'Folder only'
 
 # === OPTIONS ===
 Write-Host "  ${Gold}[4] OPTIONS$R"
+
+$dS = if ($cfg.ShowSystemInfo -eq $false) { "n" } else { "Y" }
+Write-Host "  Show system info? [Y/n, Enter=$dS]: " -NoNewline
+$c = Read-Host; if (-not $c) { $c = $dS }
+$ShowSystemInfo = $c -ne "n" -and $c -ne "N"
+
 $dG = if ($cfg.GradientText) { "Y" } else { "n" }
 Write-Host "  Gradient logo? [Y/n, Enter=$dG]: " -NoNewline
 $c = Read-Host; if (-not $c) { $c = $dG }
@@ -122,7 +129,7 @@ try {
         MatrixMode = $MatrixMode
         SecurityLoadSteps = 8
         GlitchIntensity = 3
-        ShowSystemInfo = $true
+        ShowSystemInfo = $ShowSystemInfo
         ShowFullPath = $ShowFullPath
         GradientText = $GradientText
         Theme = $Theme

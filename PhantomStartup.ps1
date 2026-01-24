@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.3"
+$Script:Version = "3.2.4"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -655,21 +655,23 @@ function Show-Dashboard {
     
     Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
-    # System info
-    @(
-        @{ L = "Operator"; V = $user; C = $Script:Colors.NeonGreen },
-        @{ L = "Host"; V = $computer; C = $Script:Colors.Gold },
-        @{ L = "System"; V = $os; C = $Script:Colors.Gold },
-        @{ L = "Uptime"; V = $uptime; C = $Script:Colors.NeonCyan },
-        @{ L = "Time"; V = $datetime; C = $Script:Colors.NeonCyan }
-    ) | ForEach-Object {
-        $content = "  $($_.L): $($_.C)$($_.V)$($Script:Colors.White)"
-        $cleanLen = ("  " + $_.L + ": " + $_.V).Length
-        $rightPad = [Math]::Max(0, $boxWidth - $cleanLen - 3)
-        Write-Host "$indent$primary$($Script:Symbols.VLine)$($Script:Colors.White)$content$(' ' * $rightPad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+    # System info (only if enabled)
+    if ($Script:Config.ShowSystemInfo) {
+        @(
+            @{ L = "Operator"; V = $user; C = $Script:Colors.NeonGreen },
+            @{ L = "Host"; V = $computer; C = $Script:Colors.Gold },
+            @{ L = "System"; V = $os; C = $Script:Colors.Gold },
+            @{ L = "Uptime"; V = $uptime; C = $Script:Colors.NeonCyan },
+            @{ L = "Time"; V = $datetime; C = $Script:Colors.NeonCyan }
+        ) | ForEach-Object {
+            $content = "  $($_.L): $($_.C)$($_.V)$($Script:Colors.White)"
+            $cleanLen = ("  " + $_.L + ": " + $_.V).Length
+            $rightPad = [Math]::Max(0, $boxWidth - $cleanLen - 3)
+            Write-Host "$indent$primary$($Script:Symbols.VLine)$($Script:Colors.White)$content$(' ' * $rightPad)$primary$($Script:Symbols.VLine)$($Script:Colors.Reset)"
+        }
+        
+        Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     }
-    
-    Write-Host "$indent$primary$($Script:Symbols.TLeft)$hLine$($Script:Symbols.TRight)$($Script:Colors.Reset)"
     
     # Quote inside box
     $quote = $Script:CurrentTheme.Quotes[(Get-Random -Max $Script:CurrentTheme.Quotes.Count)]
