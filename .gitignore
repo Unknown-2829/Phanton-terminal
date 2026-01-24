@@ -1,0 +1,21 @@
+# Ignore config/cache directories
+.phantom-terminal/
+
+# PowerShell temp files
+*.ps1.bak
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log
+
+# Test files
+test/
+*.test.ps1
