@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.8"
+$Script:Version = "3.2.9"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -90,11 +90,11 @@ $Script:Themes = @{
         Accent = "Gold"
         GradientColors = @("NeonGreen", "ElectricBlue", "Gold")
         Logo = @'
- _   _   _   _   _  __   _   _    ___   _       _   _   _
-| | | | | \ | | | |/ /  | \ | |  / _ \ | |     | | | \ | |
-| | | | |  \| | | ' /   |  \| | | | | || | /\  | | |  \| |
-| |_| | | |\  | | . \   | |\  | | |_| || |/  \ | | | |\  |
- \___/  |_| \_| |_|\_\  |_| \_|  \___/ |___/\_\|_| |_| \_|
+ _   _ _   _ _  ___   _  _____        ___   _ 
+| | | | \ | | |/ / \ | |/ _ \ \      / / \ | |
+| | | |  \| | ' /|  \| | | | \ \ /\ / /|  \| |
+| |_| | |\  | . \| |\  | |_| |\ V  V / | |\  |
+ \___/|_| \_|_|\_\_| \_|\___/  \_/\_/  |_| \_|
 '@
         Title = "UNKNOWN TERMINAL"
         Tagline = "Anonymous by Design"
