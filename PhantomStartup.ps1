@@ -132,8 +132,20 @@ function Save-PhantomCache {
 }
 
 $Script:Config = Get-PhantomConfig
-$Script:CurrentTheme = $Script:Themes[$Script:Config.Theme]
-if (-not $Script:CurrentTheme) { $Script:CurrentTheme = $Script:Themes["Phantom"] }
+
+# Load theme (case-insensitive match)
+$Script:CurrentTheme = $null
+foreach ($key in $Script:Themes.Keys) {
+    if ($key -ieq $Script:Config.Theme) {
+        $Script:CurrentTheme = $Script:Themes[$key]
+        $Script:Config.Theme = $key  # Normalize case
+        break
+    }
+}
+if (-not $Script:CurrentTheme) { 
+    $Script:CurrentTheme = $Script:Themes["Phantom"]
+    $Script:Config.Theme = "Phantom"
+}
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SILENT AUTO-UPDATE (Background Job)
@@ -579,15 +591,24 @@ function global:phantom-theme {
     if (-not $ThemeName) {
         Write-Host "`n$($Script:Colors.NeonCyan)Available themes: $available$($Script:Colors.Reset)"
         Write-Host "$($Script:Colors.Gold)Current: $($Script:Config.Theme)$($Script:Colors.Reset)"
-        Write-Host "$($Script:Colors.DarkGray)Usage: phantom-theme Phantom$($Script:Colors.Reset)`n"
+        Write-Host "$($Script:Colors.DarkGray)Usage: phantom-theme Unknown$($Script:Colors.Reset)`n"
         return
     }
     
-    if ($Script:Themes.ContainsKey($ThemeName)) {
-        $Script:Config.Theme = $ThemeName
+    # Case-insensitive theme match
+    $matchedKey = $null
+    foreach ($key in $Script:Themes.Keys) {
+        if ($key -ieq $ThemeName) {
+            $matchedKey = $key
+            break
+        }
+    }
+    
+    if ($matchedKey) {
+        $Script:Config.Theme = $matchedKey
         Save-PhantomConfig -Config $Script:Config
-        $Script:CurrentTheme = $Script:Themes[$ThemeName]
-        Write-Host "$($Script:Colors.NeonGreen)Theme changed to: $ThemeName$($Script:Colors.Reset)"
+        $Script:CurrentTheme = $Script:Themes[$matchedKey]
+        Write-Host "$($Script:Colors.NeonGreen)Theme changed to: $matchedKey$($Script:Colors.Reset)"
         Write-Host "$($Script:Colors.DarkGray)Run 'phantom-reload' to see changes$($Script:Colors.Reset)"
     } else {
         Write-Host "$($Script:Colors.BloodRed)Unknown theme. Available: $available$($Script:Colors.Reset)"
