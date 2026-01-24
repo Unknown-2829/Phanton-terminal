@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.4"
+$Script:Version = "3.2.5"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -700,9 +700,6 @@ function Show-Dashboard {
 # ═══════════════════════════════════════════════════════════════════════════
 
 function Start-PhantomTerminal {
-    # Check for updates (quick)
-    Start-BackgroundUpdateCheck
-    
     if (-not $Script:Config.AnimationEnabled) { Show-Dashboard; return }
     
     try {
@@ -716,6 +713,55 @@ function Start-PhantomTerminal {
         Write-Host "$($Script:Colors.BloodRed)Animation error: $_$($Script:Colors.Reset)"
         Show-Dashboard
     } finally { Show-Cursor }
+    
+    # Check for updates AFTER dashboard loads (non-blocking background job)
+    if ($Script:Config.AutoCheckUpdates) {
+        Start-Job -ScriptBlock {
+            param($RepoOwner, $RepoName, $CurrentVersion, $ConfigDir, $CacheFile, $ScriptPath, $SilentUpdate)
+            
+            try {
+                # Load cache
+                $cache = @{ LastUpdateCheck = $null; LatestVersion = $null; UpdateDownloaded = $false }
+                if (Test-Path $CacheFile) {
+                    try {
+                        $json = Get-Content $CacheFile -Raw | ConvertFrom-Json
+                        $cache.LastUpdateCheck = $json.LastUpdateCheck
+                        $cache.LatestVersion = $json.LatestVersion
+                        $cache.UpdateDownloaded = $json.UpdateDownloaded
+                    } catch {}
+                }
+                
+                # Check if already checked today
+                if ($cache.LastUpdateCheck) {
+                    try {
+                        $lastCheck = [DateTime]::Parse($cache.LastUpdateCheck)
+                        if (((Get-Date) - $lastCheck).TotalDays -lt 1) { return }
+                    } catch {}
+                }
+                
+                # Check GitHub
+                $apiUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
+                $response = Invoke-RestMethod -Uri $apiUrl -TimeoutSec 5
+                $latestVersion = $response.tag_name -replace '^v', ''
+                
+                $cache.LastUpdateCheck = (Get-Date).ToString("o")
+                $cache.LatestVersion = $latestVersion
+                
+                if ($latestVersion -gt $CurrentVersion -and $SilentUpdate) {
+                    # Download update
+                    $scriptUrl = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/main/PhantomStartup.ps1"
+                    $tempFile = "$env:TEMP\PhantomStartup_new.ps1"
+                    Invoke-WebRequest -Uri $scriptUrl -OutFile $tempFile -UseBasicParsing -TimeoutSec 10
+                    Copy-Item $tempFile $ScriptPath -Force
+                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                    $cache.UpdateDownloaded = $true
+                }
+                
+                # Save cache
+                $cache | ConvertTo-Json | Out-File $CacheFile -Encoding UTF8 -Force
+            } catch {}
+        } -ArgumentList $Script:RepoOwner, $Script:RepoName, $Script:Version, $Script:ConfigDir, $Script:CacheFile, "$HOME\PhantomStartup.ps1", $Script:Config.SilentUpdate | Out-Null
+    }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
