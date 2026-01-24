@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.1"
+$Script:Version = "3.2.2"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -661,7 +661,7 @@ function Show-Dashboard {
         Write-Host ""
     }
     
-    Write-Host "$indent$($Script:Colors.DarkGray)Type 'phantom-help' for commands.$($Script:Colors.Reset)"
+    Write-Host "$indent$($Script:Colors.DarkGray)Type '$($Script:Colors.Gold)phantom-help$($Script:Colors.DarkGray)' for commands.$($Script:Colors.Reset)"
     Write-Host ""
 }
 

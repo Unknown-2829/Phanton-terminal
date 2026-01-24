@@ -5,6 +5,20 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2] - 2026-01-24
+
+### Changed
+- **Performance optimizations** - Faster config loading and installer
+- **Theme-colored help** - `phantom-help` now shows in gold color
+- **Reliable config save** - Using Out-File for better persistence
+- **Updated README** - New features and themes documented
+
+### Fixed
+- Config sometimes forgetting choices on reinstall
+- Installer now properly loads all previous settings
+
+---
+
 ## [3.2.1] - 2026-01-24
 
 ### Changed

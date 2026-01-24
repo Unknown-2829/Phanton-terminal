@@ -1,7 +1,7 @@
 # 🔮 Phantom Terminal
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.0-purple?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.2.2-purple?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/PowerShell-5.1%2B-blue?style=for-the-badge&logo=powershell" alt="PowerShell">
   <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows" alt="Windows">
   <img src="https://img.shields.io/github/license/Unknown-2829/Phanton-terminal?style=for-the-badge" alt="License">
@@ -9,7 +9,7 @@
 
 <p align="center">
   <b>A cinematic startup animation for Windows Terminal / PowerShell</b><br>
-  Multi-color matrix rain • Security loading • Glitch effects • Custom dashboard
+  Multi-color matrix rain • Two themes • Glitch effects • Custom dashboard
 </p>
 
 ---
@@ -20,33 +20,46 @@
 irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
 ```
 
-That's it! Restart your terminal and enjoy.
+Interactive installer lets you choose:
+- **Theme** - Phantom (purple/cyan) or Unknown (green/blue)
+- **Matrix Mode** - Letters or Binary (0101...)
+- **Path Display** - Full path or folder only
+- **Options** - Gradient logo, auto-update
 
 ---
 
-## 📸 Preview
+## 🎨 Themes
 
+### Phantom Theme (Purple/Cyan)
 ```
- ██████╗ ██╗  ██╗ █████╗ ███╗   ██╗████████╗ ██████╗ ███╗   ███╗
- ██╔══██╗██║  ██║██╔══██╗████╗  ██║╚══██╔══╝██╔═══██╗████╗ ████║
- ██████╔╝███████║███████║██╔██╗ ██║   ██║   ██║   ██║██╔████╔██║
- ██╔═══╝ ██╔══██║██╔══██║██║╚██╗██║   ██║   ██║   ██║██║╚██╔╝██║
- ██║     ██║  ██║██║  ██║██║ ╚████║   ██║   ╚██████╔╝██║ ╚═╝ ██║
- ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝
+ ____  _   _    _    _   _ _____ ___  __  __ 
+|  _ \| | | |  / \  | \ | |_   _/ _ \|  \/  |
+|  __/|  _  |/ ___ \| |\  | | || |_| | |  | |
+|_|   |_| |_/_/   \_\_| \_| |_| \___/|_|  |_|
+```
+
+### Unknown Theme (Green/Blue)
+```
+ ##  ##  ##   ##  ##  ##  #####   ##   ##  ##   ##
+ ##  ##  ###  ##  ## ##   ##  ##  ##   ##  ###  ##
+ ##  ##  #### ##  ####    ##  ##  ##   ##  #### ##
+  ####   ##   ##  ##  ##  #####    #####   ##   ##
 ```
 
 ---
 
 ## ✨ Features
 
-- **🎬 Cinematic Startup** - Multi-stage animation sequence
-- **🌧️ Matrix Rain** - Multi-color falling characters (green/purple/cyan/blue)
-- **🔐 Security Loading** - Animated progress bars with glitch effects
-- **💀 Glitch Reveal** - Logo appears with glitch animation
-- **📊 System Dashboard** - Shows user, host, uptime, and more
-- **⚡ Fast Rendering** - Optimized with StringBuilder for speed
-- **📁 External Config** - JSON configuration file for easy customization
-- **🔄 Auto-Update** - Checks GitHub for new versions
+| Feature | Description |
+|---------|-------------|
+| 🎬 **Cinematic Startup** | Multi-stage animation sequence |
+| 🌧️ **Matrix Rain** | Letters or Binary mode with theme colors |
+| 🔐 **Security Loading** | Animated progress bars with glitch effects |
+| 💀 **Glitch Reveal** | Logo appears with glitch animation |
+| 📊 **Dashboard** | User, host, uptime, and random quotes |
+| 🎨 **Gradient Logo** | Multi-color gradient for logo display |
+| 🔄 **Auto-Update** | Silently downloads updates, notifies to reopen |
+| ⚙️ **Persistent Config** | Settings preserved on reinstall |
 
 ---
 
@@ -54,10 +67,11 @@ That's it! Restart your terminal and enjoy.
 
 | Command | Description |
 |---------|-------------|
-| `phantom-reload` | Replay startup animation |
 | `phantom-help` | Show all commands |
+| `phantom-theme` | Switch theme (Phantom/Unknown) |
 | `phantom-config` | View configuration |
 | `phantom-config -Edit` | Edit config in notepad |
+| `phantom-reload` | Replay startup animation |
 | `phantom-matrix` | Run matrix animation |
 | `phantom-dash` | Show dashboard |
 | `phantom-update` | Check for updates |
@@ -66,49 +80,44 @@ That's it! Restart your terminal and enjoy.
 
 ## ⚙️ Configuration
 
-Config file location: `~\.phantom-terminal\config.json`
+Config file: `~\.phantom-terminal\config.json`
 
 ```json
 {
   "AnimationEnabled": true,
   "MatrixDuration": 2,
-  "SecurityLoadSteps": 8,
-  "GlitchIntensity": 3,
-  "ShowSystemInfo": true,
-  "ShowUpdateNotice": true,
-  "UseUnicodeSymbols": true,
+  "MatrixMode": "Letters",
+  "Theme": "Phantom",
+  "ShowFullPath": true,
+  "GradientText": true,
   "AutoCheckUpdates": true,
-  "UpdateCheckDays": 1
+  "SilentUpdate": true
 }
 ```
 
-### Settings Explained
-
-| Setting | Default | Description |
+| Setting | Options | Description |
 |---------|---------|-------------|
-| `AnimationEnabled` | `true` | Enable/disable all animations |
-| `MatrixDuration` | `2` | Matrix rain duration in seconds |
-| `SecurityLoadSteps` | `8` | Number of steps in loading bars |
-| `GlitchIntensity` | `3` | Number of glitch iterations |
-| `ShowUpdateNotice` | `true` | Show update notification on dashboard |
-| `AutoCheckUpdates` | `true` | Auto-check for updates |
+| `Theme` | Phantom, Unknown | Color theme |
+| `MatrixMode` | Letters, Binary | Matrix rain style |
+| `ShowFullPath` | true/false | Full path in prompt |
+| `GradientText` | true/false | Gradient colors for logo |
+| `MatrixDuration` | 1-5 | Matrix rain duration (seconds) |
+| `AnimationEnabled` | true/false | Enable all animations |
 
 ---
 
 ## 📦 Manual Installation
 
-1. **Download the script:**
 ```powershell
+# Download
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.ps1" -OutFile "$HOME\PhantomStartup.ps1"
-```
 
-2. **Add to PowerShell profile:**
-```powershell
+# Add to profile
 if (!(Test-Path $PROFILE)) { New-Item -Path $PROFILE -Force }
 Add-Content $PROFILE "`n. `"$HOME\PhantomStartup.ps1`""
-```
 
-3. **Restart terminal**
+# Restart terminal
+```
 
 ---
 
