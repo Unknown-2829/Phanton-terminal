@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.4"
+$Script:Version = "3.3.5"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -917,8 +917,12 @@ $Script:LastWhoamiTime = $null
 $Script:SecretsFound = @()
 
 function global:whoami {
+    # Always run real whoami first
+    & "$env:windir\system32\whoami.exe" @args
+    
+    # Then check for Easter egg
     $now = Get-Date
-    if ($Script:LastWhoamiTime -and ($now - $Script:LastWhoamiTime).TotalSeconds -lt 3) {
+    if ($Script:LastWhoamiTime -and ($now - $Script:LastWhoamiTime).TotalSeconds -lt 2) {
         $Script:WhoamiCount++
     } else {
         $Script:WhoamiCount = 1
@@ -932,8 +936,6 @@ function global:whoami {
         Write-Host "  YOU ARE THE CHOSEN ONE" -ForegroundColor Yellow
         Write-Host "  The Matrix has you..." -ForegroundColor Cyan
         Write-Host ""
-    } else {
-        & "$env:windir\system32\whoami.exe" @args
     }
 }
 
@@ -950,23 +952,32 @@ function global:phantom-2829 {
     Write-Host ""
     Start-Sleep -Milliseconds 400
     
-    Write-Host "        Created with love by:" -ForegroundColor DarkGray
+    Write-Host "        Created with" -NoNewline -ForegroundColor DarkGray
+    Write-Host " <3 " -NoNewline -ForegroundColor Red
+    Write-Host "by:" -ForegroundColor DarkGray
     Write-Host ""
     Start-Sleep -Milliseconds 300
     
     Write-Host "        UNKNOWN-2829" -ForegroundColor Cyan
-    Write-Host "        github.com/Unknown-2829" -ForegroundColor Blue
+    Write-Host ""
+    Write-Host "        Github:- " -NoNewline -ForegroundColor DarkGray
+    Write-Host "github.com/Unknown-2829" -ForegroundColor Blue
+    Write-Host "        Telegram:- " -NoNewline -ForegroundColor DarkGray
+    Write-Host "@unknownll2829" -ForegroundColor Cyan
     Write-Host ""
     Start-Sleep -Milliseconds 400
     
-    Write-Host "        'Code in silence, shine in style.'" -ForegroundColor Yellow
+    Write-Host "        'Build different. Think different.'" -ForegroundColor Yellow
     Write-Host ""
     Start-Sleep -Milliseconds 300
     
-    Write-Host "        ----------------" -ForegroundColor DarkGray
     Write-Host "        Thank you for using Phantom Terminal!" -ForegroundColor Green
     Write-Host ""
-    Write-Host "        You discovered a secret!" -ForegroundColor Magenta
+    Write-Host ""
+    Start-Sleep -Milliseconds 500
+    
+    Write-Host "        ---" -ForegroundColor DarkGray
+    Write-Host "        Secret unlocked!" -ForegroundColor Magenta
     Write-Host ""
     
     Show-Cursor
