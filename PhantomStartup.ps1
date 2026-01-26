@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.1"
+$Script:Version = "3.3.2"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -972,13 +972,13 @@ $reset
     }
     
     Write-Host ""
-    Write-Host "  $gold[!] ACCESSING CLASSIFIED DATA...$reset"
+    Write-Host "  ${gold}[!] ACCESSING CLASSIFIED DATA...${reset}"
     Start-Sleep -Milliseconds 800
     
-    Write-Host "  $red[!] SECURITY BREACH DETECTED$reset"
+    Write-Host "  ${red}[!] SECURITY BREACH DETECTED${reset}"
     Start-Sleep -Milliseconds 400
     
-    Write-Host "  $green[+] BYPASSING FIREWALL...$reset"
+    Write-Host "  ${green}[+] BYPASSING FIREWALL...${reset}"
     Start-Sleep -Milliseconds 600
     
     Write-Host ""
@@ -993,7 +993,7 @@ $reset
     # Fake system access
     $systems = @("MAINFRAME", "DATABASE", "NETWORK", "FIREWALL", "SECURITY")
     foreach ($sys in $systems) {
-        Write-Host "  $green[ACCESS GRANTED]$white $sys$reset"
+        Write-Host "  ${green}[ACCESS GRANTED]${white} ${sys}${reset}"
         Start-Sleep -Milliseconds 150
     }
     
@@ -1022,25 +1022,25 @@ function global:phantom-??? {
     $found = $Script:SecretsDiscovered.Count
     
     if ("chosen" -in $Script:SecretsDiscovered) {
-        Write-Host "  $green[✓]$reset The Chosen One"
+        Write-Host "  ${green}[+]${reset} The Chosen One"
     } else {
-        Write-Host "  $gray[?]$reset ???"
+        Write-Host "  ${gray}[?]${reset} ???"
     }
     
     if ("2829" -in $Script:SecretsDiscovered) {
-        Write-Host "  $green[✓]$reset Creator's Mark"
+        Write-Host "  ${green}[+]${reset} Creator's Mark"
     } else {
-        Write-Host "  $gray[?]$reset ???"
+        Write-Host "  ${gray}[?]${reset} ???"
     }
     
     if ("???" -in $Script:SecretsDiscovered) {
-        Write-Host "  $green[✓]$reset Secret Hunter"
+        Write-Host "  ${green}[+]${reset} Secret Hunter"
     } else {
-        Write-Host "  $gray[?]$reset ???"
+        Write-Host "  ${gray}[?]${reset} ???"
     }
     
     Write-Host ""
-    Write-Host "  $gray$found/$total secrets found$reset"
+    Write-Host "  ${gray}${found}/${total} secrets found${reset}"
     Write-Host ""
 }
 
