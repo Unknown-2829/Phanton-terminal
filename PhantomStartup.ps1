@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.4.0"
+$Script:Version = "3.4.1"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -802,6 +802,15 @@ function Set-SmartSuggestions {
     if (-not $Script:Config.SmartSuggestions) { return }
     
     try {
+        # Try to load latest version if available (fixes 2.0.0 default issue)
+        $latest = Get-Module PSReadLine -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+        if ($latest -and $latest.Version -ge [version]"2.2.0") {
+            if ((Get-Module PSReadLine).Version -lt $latest.Version) {
+                Remove-Module PSReadLine -ErrorAction SilentlyContinue
+                Import-Module PSReadLine -Version $latest.Version -ErrorAction SilentlyContinue
+            }
+        }
+
         # Check PSReadLine version (2.2.0+ required)
         $psrl = Get-Module PSReadLine -ErrorAction SilentlyContinue
         if (-not $psrl -or $psrl.Version -lt [version]"2.2.0") { return }
