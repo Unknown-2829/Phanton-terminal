@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.6"
+$Script:Version = "3.3.7"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -912,31 +912,17 @@ function global:phantom-theme {
 # [REDACTED]
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:WhoamiCount = 0
-$Script:LastWhoamiTime = $null
 $Script:SecretsFound = @()
 
-function global:whoami {
-    # Always run real whoami first
-    & "$env:windir\system32\whoami.exe" @args
-    
-    # Then check for Easter egg
-    $now = Get-Date
-    if ($Script:LastWhoamiTime -and ($now - $Script:LastWhoamiTime).TotalSeconds -lt 2) {
-        $Script:WhoamiCount++
-    } else {
-        $Script:WhoamiCount = 1
-    }
-    $Script:LastWhoamiTime = $now
-    
-    if ($Script:WhoamiCount -ge 5) {
-        $Script:WhoamiCount = 0
-        if ("chosen" -notin $Script:SecretsFound) { $Script:SecretsFound += "chosen" }
-        Write-Host ""
-        Write-Host "  YOU ARE THE CHOSEN ONE" -ForegroundColor Yellow
-        Write-Host "  The Matrix has you..." -ForegroundColor Cyan
-        Write-Host ""
-    }
+# Secret 1: Type phantom-chosen to unlock
+function global:phantom-chosen {
+    if ("chosen" -notin $Script:SecretsFound) { $Script:SecretsFound += "chosen" }
+    Write-Host ""
+    Write-Host "  YOU ARE THE CHOSEN ONE" -ForegroundColor Yellow
+    Write-Host "  The Matrix has you..." -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Secret unlocked!" -ForegroundColor Magenta
+    Write-Host ""
 }
 
 function global:phantom-2829 {
