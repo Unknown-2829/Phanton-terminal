@@ -5,6 +5,16 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-01-26
+
+### Added
+- **Smart Installer Upgrade**: 
+  - Auto-checks and installs PSReadLine 2.2+ (needed for suggestions)
+  - New "Smart Suggestions" option in installer wizard
+  - Handles admin/non-admin installation gracefully
+
+---
+
 ## [3.4.1] - 2026-01-26
 
 ### Fixed

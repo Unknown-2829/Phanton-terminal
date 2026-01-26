@@ -102,25 +102,58 @@ $dA = if ($cfg.AutoCheckUpdates) { "Y" } else { "n" }
 Write-Host "  Auto-update? [Y/n, Enter=$dA]: " -NoNewline
 $c = Read-Host; if (-not $c) { $c = $dA }
 $AutoUpdate = $c -ne "n" -and $c -ne "N"
+
+$dSS = if ($cfg.SmartSuggestions -eq $false) { "n" } else { "Y" }
+Write-Host "  Smart Suggestions? [Y/n, Enter=$dSS]: " -NoNewline
+$c = Read-Host; if (-not $c) { $c = $dSS }
+$SmartSuggestions = $c -ne "n" -and $c -ne "N"
 Write-Host ""
 
 # === INSTALL ===
 Write-Host "  ${Gold}═══ INSTALLING ═══$R"; Write-Host ""
 
+# Check Dependencies (Smart Suggestions)
+if ($SmartSuggestions) {
+    Write-Host "  ${Cyan}[1/4]${White} Checking dependencies...$R"
+    try {
+        $psrl = Get-Module PSReadLine -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+        if (-not $psrl -or $psrl.Version -lt [version]"2.2.0") {
+            Write-Host "  ${Gray}Installing PSReadLine 2.2.6+ (required for suggestions)...$R"
+            
+            # First try CurrentUser scope (no admin needed)
+            try {
+                Install-Module PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck -AllowPrerelease -ErrorAction Stop
+                Write-Host "  ${Green}[+] PSReadLine installed (CurrentUser)$R"
+            } catch {
+                # Retry without AllowPrerelease (fix for generic Install-Module error)
+                try {
+                    Install-Module PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck -ErrorAction Stop
+                    Write-Host "  ${Green}[+] PSReadLine installed (Stable)$R"
+                } catch {
+                    Write-Host "  ${Red}[!] Could not auto-install PSReadLine. Try running as Admin.$R"
+                    Write-Host "  ${Gray}    Suggestions might not work until installed.$R"
+                }
+            }
+        } else {
+            Write-Host "  ${Green}[+] Dependencies OK$R"
+        }
+    } catch {}
+}
+
 try {
     # Download
-    Write-Host "  ${Cyan}[1/3]${White} Downloading...$R"
+    Write-Host "  ${Cyan}[2/4]${White} Downloading...$R"
     Invoke-WebRequest -Uri "$RepoUrl/PhantomStartup.ps1" -OutFile $InstallPath -UseBasicParsing -TimeoutSec 30
     Write-Host "  ${Green}[+] Downloaded$R"
 
     # Profile
-    Write-Host "  ${Cyan}[2/3]${White} Profile...$R"
+    Write-Host "  ${Cyan}[3/4]${White} Profile...$R"
     if (!(Test-Path $PROFILE)) { New-Item -Path $PROFILE -ItemType File -Force | Out-Null }
     Add-Content $PROFILE "`n# Phantom Terminal`n. `"$InstallPath`""
     Write-Host "  ${Green}[+] Profile updated$R"
 
     # Config (reliable save)
-    Write-Host "  ${Cyan}[3/3]${White} Config...$R"
+    Write-Host "  ${Cyan}[4/4]${White} Config...$R"
     if (!(Test-Path $ConfigDir)) { New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null }
     
     $config = @{
@@ -132,6 +165,7 @@ try {
         ShowSystemInfo = $ShowSystemInfo
         ShowFullPath = $ShowFullPath
         GradientText = $GradientText
+        SmartSuggestions = $SmartSuggestions
         Theme = $Theme
         AutoCheckUpdates = $AutoUpdate
         SilentUpdate = $true
