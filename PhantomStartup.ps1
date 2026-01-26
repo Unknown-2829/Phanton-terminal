@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.0"
+$Script:Version = "3.3.1"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -909,9 +909,146 @@ function global:phantom-theme {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+# [REDACTED]
+# ═══════════════════════════════════════════════════════════════════════════
+
+$Script:WhoamiCount = 0
+$Script:LastWhoamiTime = $null
+$Script:SecretsDiscovered = @()
+
+function global:whoami {
+    $now = Get-Date
+    if ($Script:LastWhoamiTime -and ($now - $Script:LastWhoamiTime).TotalSeconds -lt 3) {
+        $Script:WhoamiCount++
+    } else {
+        $Script:WhoamiCount = 1
+    }
+    $Script:LastWhoamiTime = $now
+    
+    if ($Script:WhoamiCount -ge 5) {
+        $Script:WhoamiCount = 0
+        if ("chosen" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "chosen" }
+        Write-Host ""
+        Write-Host "$($Script:Colors.Gold)  ░▒▓ YOU ARE THE CHOSEN ONE ▓▒░$($Script:Colors.Reset)"
+        Write-Host "$($Script:Colors.NeonCyan)  The Matrix has you...$($Script:Colors.Reset)"
+        Write-Host ""
+    } else {
+        & "$env:windir\system32\whoami.exe" @args
+    }
+}
+
+function global:phantom-2829 {
+    if ("2829" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "2829" }
+    $red = $Script:Colors.BloodRed
+    $green = $Script:Colors.NeonGreen
+    $cyan = $Script:Colors.NeonCyan
+    $gold = $Script:Colors.Gold
+    $white = $Script:Colors.White
+    $reset = $Script:Colors.Reset
+    
+    Clear-Host
+    Hide-Cursor
+    
+    # Danger warning
+    $warning = @"
+$red
+    ██████╗  █████╗ ███╗   ██╗ ██████╗ ███████╗██████╗ 
+    ██╔══██╗██╔══██╗████╗  ██║██╔════╝ ██╔════╝██╔══██╗
+    ██║  ██║███████║██╔██╗ ██║██║  ███╗█████╗  ██████╔╝
+    ██║  ██║██╔══██║██║╚██╗██║██║   ██║██╔══╝  ██╔══██╗
+    ██████╔╝██║  ██║██║ ╚████║╚██████╔╝███████╗██║  ██║
+    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝
+$reset
+"@
+    Write-Host $warning
+    Start-Sleep -Milliseconds 500
+    
+    # Glitch text
+    for ($i = 0; $i -lt 5; $i++) {
+        $glitchChars = "!@#$%^&*()_+-=[]{}|;:,.<>?/\~``"
+        $glitchLine = -join (1..60 | ForEach-Object { $glitchChars[(Get-Random -Max $glitchChars.Length)] })
+        Write-Host "  $red$glitchLine$reset"
+        Start-Sleep -Milliseconds 50
+    }
+    
+    Write-Host ""
+    Write-Host "  $gold[!] ACCESSING CLASSIFIED DATA...$reset"
+    Start-Sleep -Milliseconds 800
+    
+    Write-Host "  $red[!] SECURITY BREACH DETECTED$reset"
+    Start-Sleep -Milliseconds 400
+    
+    Write-Host "  $green[+] BYPASSING FIREWALL...$reset"
+    Start-Sleep -Milliseconds 600
+    
+    Write-Host ""
+    Write-Host "  $cyan╔══════════════════════════════════════════════╗$reset"
+    Write-Host "  $cyan║$white          CREATOR: UNKNOWN-2829              $cyan║$reset"
+    Write-Host "  $cyan║$gold       github.com/Unknown-2829             $cyan║$reset"
+    Write-Host "  $cyan║$white                                              $cyan║$reset"
+    Write-Host "  $cyan║$red   'In the shadows, we code.'              $cyan║$reset"
+    Write-Host "  $cyan╚══════════════════════════════════════════════╝$reset"
+    Write-Host ""
+    
+    # Fake system access
+    $systems = @("MAINFRAME", "DATABASE", "NETWORK", "FIREWALL", "SECURITY")
+    foreach ($sys in $systems) {
+        Write-Host "  $green[ACCESS GRANTED]$white $sys$reset"
+        Start-Sleep -Milliseconds 150
+    }
+    
+    Write-Host ""
+    Write-Host "  $gold▀▀▀ PHANTOM TERMINAL ▀▀▀$reset"
+    Write-Host "  $white  You found a secret.$reset"
+    Write-Host ""
+    
+    Show-Cursor
+}
+
+function global:phantom-??? {
+    if ("???" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "???" }
+    $gold = $Script:Colors.Gold
+    $green = $Script:Colors.NeonGreen
+    $gray = $Script:Colors.DarkGray
+    $reset = $Script:Colors.Reset
+    
+    Write-Host ""
+    Write-Host "$gold  ╔═══════════════════════════════════╗$reset"
+    Write-Host "$gold  ║$green      SECRETS DISCOVERED          $gold║$reset"
+    Write-Host "$gold  ╚═══════════════════════════════════╝$reset"
+    Write-Host ""
+    
+    $total = 3
+    $found = $Script:SecretsDiscovered.Count
+    
+    if ("chosen" -in $Script:SecretsDiscovered) {
+        Write-Host "  $green[✓]$reset The Chosen One"
+    } else {
+        Write-Host "  $gray[?]$reset ???"
+    }
+    
+    if ("2829" -in $Script:SecretsDiscovered) {
+        Write-Host "  $green[✓]$reset Creator's Mark"
+    } else {
+        Write-Host "  $gray[?]$reset ???"
+    }
+    
+    if ("???" -in $Script:SecretsDiscovered) {
+        Write-Host "  $green[✓]$reset Secret Hunter"
+    } else {
+        Write-Host "  $gray[?]$reset ???"
+    }
+    
+    Write-Host ""
+    Write-Host "  $gray$found/$total secrets found$reset"
+    Write-Host ""
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 # ENTRY
 # ═══════════════════════════════════════════════════════════════════════════
 
 Set-PhantomPrompt
 Set-SmartSuggestions
 Start-PhantomTerminal
+
