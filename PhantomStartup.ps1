@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.8"
+$Script:Version = "3.3.9"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -812,16 +812,16 @@ function Set-SmartSuggestions {
         # InlineView - shows suggestion in gray text as you type (like browser)
         Set-PSReadLineOption -PredictionViewStyle InlineView -ErrorAction SilentlyContinue
         
-        # Light gray color for inline suggestions
+        # Theme-based color for inline suggestions
+        $suggestionColor = if ($Script:CurrentTheme.Name -eq "Unknown") { "DarkGreen" } else { "DarkMagenta" }
         Set-PSReadLineOption -Colors @{
-            InlinePrediction = "DarkGray"
+            InlinePrediction = $suggestionColor
         } -ErrorAction SilentlyContinue
         
-        # Key bindings: Tab or RightArrow to accept suggestion
-        Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete -ErrorAction SilentlyContinue
+        # Key bindings: Tab to accept full suggestion, RightArrow for char-by-char
+        Set-PSReadLineKeyHandler -Key Tab -Function AcceptSuggestion -ErrorAction SilentlyContinue
         Set-PSReadLineKeyHandler -Key RightArrow -Function ForwardChar -ErrorAction SilentlyContinue
         Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function AcceptNextSuggestionWord -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key End -Function AcceptSuggestion -ErrorAction SilentlyContinue
         
         # Better history settings
         Set-PSReadLineOption -HistorySearchCursorMovesToEnd $true -ErrorAction SilentlyContinue
