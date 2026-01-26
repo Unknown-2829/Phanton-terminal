@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.5"
+$Script:Version = "3.3.6"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -945,39 +945,56 @@ function global:phantom-2829 {
     Clear-Host
     Hide-Cursor
     
+    # Get console width for centering
+    $width = $Host.UI.RawUI.WindowSize.Width
+    function Center($text) { 
+        $pad = [math]::Max(0, ($width - $text.Length) / 2)
+        return (" " * $pad) + $text
+    }
+    
     Write-Host ""
     Write-Host ""
-    Write-Host "        PHANTOM TERMINAL" -ForegroundColor Magenta
-    Write-Host "        =================" -ForegroundColor DarkMagenta
     Write-Host ""
+    
+    Start-Sleep -Milliseconds 500
+    Write-Host (Center "PHANTOM TERMINAL") -ForegroundColor Magenta
     Start-Sleep -Milliseconds 400
     
-    Write-Host "        Created with" -NoNewline -ForegroundColor DarkGray
-    Write-Host " <3 " -NoNewline -ForegroundColor Red
-    Write-Host "by:" -ForegroundColor DarkGray
-    Write-Host ""
-    Start-Sleep -Milliseconds 300
+    Write-Host (Center "=================") -ForegroundColor DarkMagenta
+    Start-Sleep -Milliseconds 600
     
-    Write-Host "        UNKNOWN-2829" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "        Github:- " -NoNewline -ForegroundColor DarkGray
-    Write-Host "github.com/Unknown-2829" -ForegroundColor Blue
-    Write-Host "        Telegram:- " -NoNewline -ForegroundColor DarkGray
-    Write-Host "@unknownll2829" -ForegroundColor Cyan
-    Write-Host ""
-    Start-Sleep -Milliseconds 400
-    
-    Write-Host "        'Build different. Think different.'" -ForegroundColor Yellow
-    Write-Host ""
-    Start-Sleep -Milliseconds 300
-    
-    Write-Host "        Thank you for using Phantom Terminal!" -ForegroundColor Green
     Write-Host ""
     Write-Host ""
+    Write-Host (Center "Created with <3 by") -ForegroundColor DarkGray
     Start-Sleep -Milliseconds 500
     
-    Write-Host "        ---" -ForegroundColor DarkGray
-    Write-Host "        Secret unlocked!" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host (Center "UNKNOWN-2829") -ForegroundColor Cyan
+    Start-Sleep -Milliseconds 600
+    
+    Write-Host ""
+    Write-Host ""
+    Write-Host (Center "Github:- github.com/Unknown-2829") -ForegroundColor Blue
+    Start-Sleep -Milliseconds 400
+    
+    Write-Host (Center "Telegram:- @unknownll2829") -ForegroundColor Cyan
+    Start-Sleep -Milliseconds 600
+    
+    Write-Host ""
+    Write-Host ""
+    Write-Host (Center "'Build different. Think different.'") -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 700
+    
+    Write-Host ""
+    Write-Host ""
+    Write-Host (Center "Thank you for using Phantom Terminal!") -ForegroundColor Green
+    Start-Sleep -Milliseconds 800
+    
+    Write-Host ""
+    Write-Host ""
+    Write-Host (Center "---") -ForegroundColor DarkGray
+    Start-Sleep -Milliseconds 300
+    Write-Host (Center "Secret unlocked!") -ForegroundColor Magenta
     Write-Host ""
     
     Show-Cursor
