@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.2"
+$Script:Version = "3.3.3"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -972,13 +972,13 @@ $reset
     }
     
     Write-Host ""
-    Write-Host "  ${gold}[!] ACCESSING CLASSIFIED DATA...${reset}"
+    Write-Host "  " -NoNewline; Write-Host $gold -NoNewline; Write-Host "[!] ACCESSING CLASSIFIED DATA..." -NoNewline; Write-Host $reset
     Start-Sleep -Milliseconds 800
     
-    Write-Host "  ${red}[!] SECURITY BREACH DETECTED${reset}"
+    Write-Host "  " -NoNewline; Write-Host $red -NoNewline; Write-Host "[!] SECURITY BREACH DETECTED" -NoNewline; Write-Host $reset
     Start-Sleep -Milliseconds 400
     
-    Write-Host "  ${green}[+] BYPASSING FIREWALL...${reset}"
+    Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+] BYPASSING FIREWALL..." -NoNewline; Write-Host $reset
     Start-Sleep -Milliseconds 600
     
     Write-Host ""
@@ -993,7 +993,7 @@ $reset
     # Fake system access
     $systems = @("MAINFRAME", "DATABASE", "NETWORK", "FIREWALL", "SECURITY")
     foreach ($sys in $systems) {
-        Write-Host "  ${green}[ACCESS GRANTED]${white} ${sys}${reset}"
+        Write-Host "  " -NoNewline; Write-Host "$green" -NoNewline; Write-Host "[ACCESS GRANTED]" -NoNewline; Write-Host "$white $sys$reset"
         Start-Sleep -Milliseconds 150
     }
     
@@ -1022,21 +1022,21 @@ function global:phantom-??? {
     $found = $Script:SecretsDiscovered.Count
     
     if ("chosen" -in $Script:SecretsDiscovered) {
-        Write-Host "  ${green}[+]${reset} The Chosen One"
+        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset The Chosen One"
     } else {
-        Write-Host "  ${gray}[?]${reset} ???"
+        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
     }
     
     if ("2829" -in $Script:SecretsDiscovered) {
-        Write-Host "  ${green}[+]${reset} Creator's Mark"
+        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset Creator's Mark"
     } else {
-        Write-Host "  ${gray}[?]${reset} ???"
+        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
     }
     
     if ("???" -in $Script:SecretsDiscovered) {
-        Write-Host "  ${green}[+]${reset} Secret Hunter"
+        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset Secret Hunter"
     } else {
-        Write-Host "  ${gray}[?]${reset} ???"
+        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
     }
     
     Write-Host ""
