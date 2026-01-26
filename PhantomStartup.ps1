@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.3"
+$Script:Version = "3.3.4"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -914,7 +914,7 @@ function global:phantom-theme {
 
 $Script:WhoamiCount = 0
 $Script:LastWhoamiTime = $null
-$Script:SecretsDiscovered = @()
+$Script:SecretsFound = @()
 
 function global:whoami {
     $now = Get-Date
@@ -927,10 +927,10 @@ function global:whoami {
     
     if ($Script:WhoamiCount -ge 5) {
         $Script:WhoamiCount = 0
-        if ("chosen" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "chosen" }
+        if ("chosen" -notin $Script:SecretsFound) { $Script:SecretsFound += "chosen" }
         Write-Host ""
-        Write-Host "$($Script:Colors.Gold)  ░▒▓ YOU ARE THE CHOSEN ONE ▓▒░$($Script:Colors.Reset)"
-        Write-Host "$($Script:Colors.NeonCyan)  The Matrix has you...$($Script:Colors.Reset)"
+        Write-Host "  YOU ARE THE CHOSEN ONE" -ForegroundColor Yellow
+        Write-Host "  The Matrix has you..." -ForegroundColor Cyan
         Write-Host ""
     } else {
         & "$env:windir\system32\whoami.exe" @args
@@ -938,109 +938,70 @@ function global:whoami {
 }
 
 function global:phantom-2829 {
-    if ("2829" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "2829" }
-    $red = $Script:Colors.BloodRed
-    $green = $Script:Colors.NeonGreen
-    $cyan = $Script:Colors.NeonCyan
-    $gold = $Script:Colors.Gold
-    $white = $Script:Colors.White
-    $reset = $Script:Colors.Reset
+    if ("2829" -notin $Script:SecretsFound) { $Script:SecretsFound += "2829" }
     
     Clear-Host
     Hide-Cursor
     
-    # Danger warning
-    $warning = @"
-$red
-    ██████╗  █████╗ ███╗   ██╗ ██████╗ ███████╗██████╗ 
-    ██╔══██╗██╔══██╗████╗  ██║██╔════╝ ██╔════╝██╔══██╗
-    ██║  ██║███████║██╔██╗ ██║██║  ███╗█████╗  ██████╔╝
-    ██║  ██║██╔══██║██║╚██╗██║██║   ██║██╔══╝  ██╔══██╗
-    ██████╔╝██║  ██║██║ ╚████║╚██████╔╝███████╗██║  ██║
-    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝
-$reset
-"@
-    Write-Host $warning
-    Start-Sleep -Milliseconds 500
-    
-    # Glitch text
-    for ($i = 0; $i -lt 5; $i++) {
-        $glitchChars = "!@#$%^&*()_+-=[]{}|;:,.<>?/\~``"
-        $glitchLine = -join (1..60 | ForEach-Object { $glitchChars[(Get-Random -Max $glitchChars.Length)] })
-        Write-Host "  $red$glitchLine$reset"
-        Start-Sleep -Milliseconds 50
-    }
-    
     Write-Host ""
-    Write-Host "  " -NoNewline; Write-Host $gold -NoNewline; Write-Host "[!] ACCESSING CLASSIFIED DATA..." -NoNewline; Write-Host $reset
-    Start-Sleep -Milliseconds 800
-    
-    Write-Host "  " -NoNewline; Write-Host $red -NoNewline; Write-Host "[!] SECURITY BREACH DETECTED" -NoNewline; Write-Host $reset
+    Write-Host ""
+    Write-Host "        PHANTOM TERMINAL" -ForegroundColor Magenta
+    Write-Host "        =================" -ForegroundColor DarkMagenta
+    Write-Host ""
     Start-Sleep -Milliseconds 400
     
-    Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+] BYPASSING FIREWALL..." -NoNewline; Write-Host $reset
-    Start-Sleep -Milliseconds 600
-    
+    Write-Host "        Created with love by:" -ForegroundColor DarkGray
     Write-Host ""
-    Write-Host "  $cyan╔══════════════════════════════════════════════╗$reset"
-    Write-Host "  $cyan║$white          CREATOR: UNKNOWN-2829              $cyan║$reset"
-    Write-Host "  $cyan║$gold       github.com/Unknown-2829             $cyan║$reset"
-    Write-Host "  $cyan║$white                                              $cyan║$reset"
-    Write-Host "  $cyan║$red   'In the shadows, we code.'              $cyan║$reset"
-    Write-Host "  $cyan╚══════════════════════════════════════════════╝$reset"
-    Write-Host ""
+    Start-Sleep -Milliseconds 300
     
-    # Fake system access
-    $systems = @("MAINFRAME", "DATABASE", "NETWORK", "FIREWALL", "SECURITY")
-    foreach ($sys in $systems) {
-        Write-Host "  " -NoNewline; Write-Host "$green" -NoNewline; Write-Host "[ACCESS GRANTED]" -NoNewline; Write-Host "$white $sys$reset"
-        Start-Sleep -Milliseconds 150
-    }
-    
+    Write-Host "        UNKNOWN-2829" -ForegroundColor Cyan
+    Write-Host "        github.com/Unknown-2829" -ForegroundColor Blue
     Write-Host ""
-    Write-Host "  $gold▀▀▀ PHANTOM TERMINAL ▀▀▀$reset"
-    Write-Host "  $white  You found a secret.$reset"
+    Start-Sleep -Milliseconds 400
+    
+    Write-Host "        'Code in silence, shine in style.'" -ForegroundColor Yellow
+    Write-Host ""
+    Start-Sleep -Milliseconds 300
+    
+    Write-Host "        ----------------" -ForegroundColor DarkGray
+    Write-Host "        Thank you for using Phantom Terminal!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "        You discovered a secret!" -ForegroundColor Magenta
     Write-Host ""
     
     Show-Cursor
 }
 
-function global:phantom-??? {
-    if ("???" -notin $Script:SecretsDiscovered) { $Script:SecretsDiscovered += "???" }
-    $gold = $Script:Colors.Gold
-    $green = $Script:Colors.NeonGreen
-    $gray = $Script:Colors.DarkGray
-    $reset = $Script:Colors.Reset
+function global:phantom-secrets {
+    if ("secrets" -notin $Script:SecretsFound) { $Script:SecretsFound += "secrets" }
     
     Write-Host ""
-    Write-Host "$gold  ╔═══════════════════════════════════╗$reset"
-    Write-Host "$gold  ║$green      SECRETS DISCOVERED          $gold║$reset"
-    Write-Host "$gold  ╚═══════════════════════════════════╝$reset"
+    Write-Host "  === SECRETS DISCOVERED ===" -ForegroundColor Yellow
     Write-Host ""
     
     $total = 3
-    $found = $Script:SecretsDiscovered.Count
+    $found = $Script:SecretsFound.Count
     
-    if ("chosen" -in $Script:SecretsDiscovered) {
-        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset The Chosen One"
+    if ("chosen" -in $Script:SecretsFound) {
+        Write-Host "  [+] The Chosen One" -ForegroundColor Green
     } else {
-        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
+        Write-Host "  [?] ???" -ForegroundColor DarkGray
     }
     
-    if ("2829" -in $Script:SecretsDiscovered) {
-        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset Creator's Mark"
+    if ("2829" -in $Script:SecretsFound) {
+        Write-Host "  [+] Creator's Mark" -ForegroundColor Green
     } else {
-        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
+        Write-Host "  [?] ???" -ForegroundColor DarkGray
     }
     
-    if ("???" -in $Script:SecretsDiscovered) {
-        Write-Host "  " -NoNewline; Write-Host $green -NoNewline; Write-Host "[+]" -NoNewline; Write-Host "$reset Secret Hunter"
+    if ("secrets" -in $Script:SecretsFound) {
+        Write-Host "  [+] Secret Hunter" -ForegroundColor Green
     } else {
-        Write-Host "  " -NoNewline; Write-Host $gray -NoNewline; Write-Host "[?]" -NoNewline; Write-Host "$reset ???"
+        Write-Host "  [?] ???" -ForegroundColor DarkGray
     }
     
     Write-Host ""
-    Write-Host "  ${gray}${found}/${total} secrets found${reset}"
+    Write-Host "  $found/$total secrets found" -ForegroundColor DarkGray
     Write-Host ""
 }
 
