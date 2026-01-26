@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.7"
+$Script:Version = "3.3.8"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -809,23 +809,19 @@ function Set-SmartSuggestions {
         # Enable history-based predictions (100% local, no external calls)
         Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
         
-        # ListView style for better visibility (shows multiple suggestions)
-        Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction SilentlyContinue
+        # InlineView - shows suggestion in gray text as you type (like browser)
+        Set-PSReadLineOption -PredictionViewStyle InlineView -ErrorAction SilentlyContinue
         
-        # Theme-matching colors for suggestions
-        $suggestionColor = if ($Script:CurrentTheme.Name -eq "Unknown") { "DarkGreen" } else { "DarkMagenta" }
+        # Light gray color for inline suggestions
         Set-PSReadLineOption -Colors @{
-            InlinePrediction = $suggestionColor
-            ListPrediction = "DarkCyan"
-            ListPredictionSelected = "Cyan"
+            InlinePrediction = "DarkGray"
         } -ErrorAction SilentlyContinue
         
-        # Key bindings for suggestions
+        # Key bindings: Tab or RightArrow to accept suggestion
         Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function ForwardWord -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key "Ctrl+f" -Function AcceptSuggestion -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key RightArrow -Function ForwardChar -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function AcceptNextSuggestionWord -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key End -Function AcceptSuggestion -ErrorAction SilentlyContinue
         
         # Better history settings
         Set-PSReadLineOption -HistorySearchCursorMovesToEnd $true -ErrorAction SilentlyContinue
