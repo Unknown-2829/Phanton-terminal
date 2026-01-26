@@ -5,6 +5,17 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-01-26
+
+### Changed
+- **Smart Suggestions v2** - Simplified and reliable
+  - Inline predictions as you type (theme-colored)
+  - `F2` / `Ctrl+F` / `End` to accept suggestion
+  - No duplicate history, faster performance
+  - 100% local, no data collection
+
+---
+
 ## [3.3.9] - 2026-01-26
 
 ### Changed

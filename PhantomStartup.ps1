@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.3.9"
+$Script:Version = "3.4.0"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -802,33 +802,36 @@ function Set-SmartSuggestions {
     if (-not $Script:Config.SmartSuggestions) { return }
     
     try {
-        # Check PSReadLine version (2.2.0+ required for predictions)
+        # Check PSReadLine version (2.2.0+ required)
         $psrl = Get-Module PSReadLine -ErrorAction SilentlyContinue
         if (-not $psrl -or $psrl.Version -lt [version]"2.2.0") { return }
         
-        # Enable history-based predictions (100% local, no external calls)
+        # === CORE: Enable inline predictions ===
         Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
-        
-        # InlineView - shows suggestion in gray text as you type (like browser)
         Set-PSReadLineOption -PredictionViewStyle InlineView -ErrorAction SilentlyContinue
         
-        # Theme-based color for inline suggestions
-        $suggestionColor = if ($Script:CurrentTheme.Name -eq "Unknown") { "DarkGreen" } else { "DarkMagenta" }
-        Set-PSReadLineOption -Colors @{
-            InlinePrediction = $suggestionColor
-        } -ErrorAction SilentlyContinue
+        # Theme-based color (purple for Phantom, green for Unknown)
+        $color = if ($Script:CurrentTheme.Name -eq "Unknown") { "DarkGreen" } else { "DarkMagenta" }
+        Set-PSReadLineOption -Colors @{ InlinePrediction = $color } -ErrorAction SilentlyContinue
         
-        # Key bindings: Tab to accept full suggestion, RightArrow for char-by-char
-        Set-PSReadLineKeyHandler -Key Tab -Function AcceptSuggestion -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key RightArrow -Function ForwardChar -ErrorAction SilentlyContinue
-        Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function AcceptNextSuggestionWord -ErrorAction SilentlyContinue
-        
-        # Better history settings
+        # === PERFORMANCE ===
+        Set-PSReadLineOption -BellStyle None -ErrorAction SilentlyContinue
+        Set-PSReadLineOption -HistoryNoDuplicates $true -ErrorAction SilentlyContinue
         Set-PSReadLineOption -HistorySearchCursorMovesToEnd $true -ErrorAction SilentlyContinue
         Set-PSReadLineOption -MaximumHistoryCount 5000 -ErrorAction SilentlyContinue
         
+        # === SIMPLE KEYBINDINGS (guaranteed to work) ===
+        # F2 = Accept full suggestion (never conflicts)
+        Set-PSReadLineKeyHandler -Key F2 -Function AcceptSuggestion -ErrorAction SilentlyContinue
+        
+        # Ctrl+F = Accept suggestion (like terminal convention)
+        Set-PSReadLineKeyHandler -Key Ctrl+f -Function AcceptSuggestion -ErrorAction SilentlyContinue
+        
+        # End = Accept suggestion
+        Set-PSReadLineKeyHandler -Key End -Function AcceptSuggestion -ErrorAction SilentlyContinue
+        
     } catch {
-        # Silent fail - suggestions are optional enhancement
+        # Silent fail
     }
 }
 
