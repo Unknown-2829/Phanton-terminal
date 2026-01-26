@@ -3,7 +3,7 @@
     Phantom Terminal - Advanced PowerShell Startup Animation v3.2
 .DESCRIPTION
     Cinematic startup animation with multiple themes, effects, and customization.
-    Features: Matrix/Binary rain, typing effects, gradients, CPU/RAM bars, themes.
+    Features: Matrix/Binary rain, gradients, themes.
 .NOTES
     Creator: @unknownlll2829 (Telegram)
     GitHub: https://github.com/Unknown-2829/Phanton-terminal
@@ -14,7 +14,7 @@
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.2.9"
+$Script:Version = "3.3.0"
 $Script:RepoOwner = "Unknown-2829"
 $Script:RepoName = "Phanton-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
@@ -41,6 +41,9 @@ $Script:DefaultConfig = @{
     ShowSystemInfo     = $true
     ShowFullPath       = $true
     GradientText       = $true        # Gradient colors for logo
+    
+    # Smart Suggestions (local history-based, no data collection)
+    SmartSuggestions   = $true
     
     # Theme
     Theme              = "Phantom"
@@ -792,6 +795,48 @@ function Set-PhantomPrompt {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+# SMART SUGGESTIONS (Local history-based predictions - No data collection)
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Set-SmartSuggestions {
+    if (-not $Script:Config.SmartSuggestions) { return }
+    
+    try {
+        # Check PSReadLine version (2.2.0+ required for predictions)
+        $psrl = Get-Module PSReadLine -ErrorAction SilentlyContinue
+        if (-not $psrl -or $psrl.Version -lt [version]"2.2.0") { return }
+        
+        # Enable history-based predictions (100% local, no external calls)
+        Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
+        
+        # ListView style for better visibility (shows multiple suggestions)
+        Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction SilentlyContinue
+        
+        # Theme-matching colors for suggestions
+        $suggestionColor = if ($Script:CurrentTheme.Name -eq "Unknown") { "DarkGreen" } else { "DarkMagenta" }
+        Set-PSReadLineOption -Colors @{
+            InlinePrediction = $suggestionColor
+            ListPrediction = "DarkCyan"
+            ListPredictionSelected = "Cyan"
+        } -ErrorAction SilentlyContinue
+        
+        # Key bindings for suggestions
+        Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key "Ctrl+RightArrow" -Function ForwardWord -ErrorAction SilentlyContinue
+        Set-PSReadLineKeyHandler -Key "Ctrl+f" -Function AcceptSuggestion -ErrorAction SilentlyContinue
+        
+        # Better history settings
+        Set-PSReadLineOption -HistorySearchCursorMovesToEnd $true -ErrorAction SilentlyContinue
+        Set-PSReadLineOption -MaximumHistoryCount 5000 -ErrorAction SilentlyContinue
+        
+    } catch {
+        # Silent fail - suggestions are optional enhancement
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 # COMMANDS
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -868,4 +913,5 @@ function global:phantom-theme {
 # ═══════════════════════════════════════════════════════════════════════════
 
 Set-PhantomPrompt
+Set-SmartSuggestions
 Start-PhantomTerminal

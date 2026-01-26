@@ -91,6 +91,7 @@ Config file: `~\.phantom-terminal\config.json`
   "Theme": "Phantom",
   "ShowFullPath": true,
   "GradientText": true,
+  "SmartSuggestions": true,
   "AutoCheckUpdates": true,
   "SilentUpdate": true
 }
@@ -102,6 +103,7 @@ Config file: `~\.phantom-terminal\config.json`
 | `MatrixMode` | Letters, Binary | Matrix rain style |
 | `ShowFullPath` | true/false | Full path in prompt |
 | `GradientText` | true/false | Gradient colors for logo |
+| `SmartSuggestions` | true/false | History-based command predictions (local only) |
 | `MatrixDuration` | 1-5 | Matrix rain duration (seconds) |
 | `AnimationEnabled` | true/false | Enable all animations |
 
