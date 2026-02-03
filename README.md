@@ -1,7 +1,7 @@
 # 🔮 Phantom Terminal
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.2.2-purple?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5.0-purple?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/PowerShell-5.1%2B-blue?style=for-the-badge&logo=powershell" alt="PowerShell">
   <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows" alt="Windows">
   <img src="https://img.shields.io/github/license/Unknown-2829/Phanton-terminal?style=for-the-badge" alt="License">
@@ -86,14 +86,18 @@ Config file: `~\.phantom-terminal\config.json`
 ```json
 {
   "AnimationEnabled": true,
+  "SecurityLoadSteps": 8,
+  "GlitchIntensity": 3,
   "MatrixDuration": 2,
   "MatrixMode": "Letters",
   "Theme": "Phantom",
+  "ShowSystemInfo": true,
   "ShowFullPath": true,
   "GradientText": true,
   "SmartSuggestions": true,
   "AutoCheckUpdates": true,
-  "SilentUpdate": true
+  "SilentUpdate": true,
+  "UpdateCheckDays": 1
 }
 ```
 
@@ -101,11 +105,15 @@ Config file: `~\.phantom-terminal\config.json`
 |---------|---------|-------------|
 | `Theme` | Phantom, Unknown | Color theme |
 | `MatrixMode` | Letters, Binary | Matrix rain style |
+| `SecurityLoadSteps` | 1-12 | Loading bar segments for the security sequence |
+| `GlitchIntensity` | 0-5 | Glitch effect strength |
+| `ShowSystemInfo` | true/false | Show system details in the dashboard |
 | `ShowFullPath` | true/false | Full path in prompt |
 | `GradientText` | true/false | Gradient colors for logo |
 | `SmartSuggestions` | true/false | History-based command predictions (local only) |
 | `MatrixDuration` | 1-5 | Matrix rain duration (seconds) |
 | `AnimationEnabled` | true/false | Enable all animations |
+| `UpdateCheckDays` | 1+ | Days between update checks |
 
 ---
 
