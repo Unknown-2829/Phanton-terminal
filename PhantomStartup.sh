@@ -186,6 +186,36 @@ EOF
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
+# CACHE MANAGEMENT
+# ═══════════════════════════════════════════════════════════════════════════
+
+get_cache() {
+    if [[ -f "$CACHE_FILE" ]] && command -v jq &> /dev/null; then
+        LAST_UPDATE_CHECK=$(jq -r '.LastUpdateCheck // ""' "$CACHE_FILE" 2>/dev/null)
+        LATEST_VERSION=$(jq -r '.LatestVersion // ""' "$CACHE_FILE" 2>/dev/null)
+        UPDATE_AVAILABLE=$(jq -r '.UpdateAvailable // false' "$CACHE_FILE" 2>/dev/null)
+    else
+        LAST_UPDATE_CHECK=""
+        LATEST_VERSION=""
+        UPDATE_AVAILABLE=false
+    fi
+}
+
+save_cache() {
+    local last_check="${1:-}"
+    local latest_ver="${2:-}"
+    local update_avail="${3:-false}"
+
+    cat > "$CACHE_FILE" <<EOF
+{
+  "LastUpdateCheck": "$last_check",
+  "LatestVersion": "$latest_ver",
+  "UpdateAvailable": $update_avail
+}
+EOF
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
 # THEMES
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -272,6 +302,12 @@ clear_screen() {
 get_terminal_size() {
     TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
     TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
+
+    # Detect small/mobile screens and adjust for Termux
+    IS_SMALL_SCREEN=false
+    if [[ $TERM_WIDTH -lt 80 ]] || [[ "$PLATFORM" == "termux" ]]; then
+        IS_SMALL_SCREEN=true
+    fi
 }
 
 move_cursor() {
@@ -314,6 +350,12 @@ show_multicolor_matrix() {
     clear_screen
     get_terminal_size
 
+    # Reduce duration on small screens/mobile for performance
+    if [[ "$IS_SMALL_SCREEN" == "true" ]]; then
+        duration=$((duration / 2))
+        [[ $duration -lt 1 ]] && duration=1
+    fi
+
     # Get matrix chars based on mode
     local chars
     if [[ "$MATRIX_MODE" == "Binary" ]]; then
@@ -325,15 +367,23 @@ show_multicolor_matrix() {
     # Color list
     local colors=("$PRIMARY" "$SECONDARY" "$NEON_CYAN" "$ELECTRIC_BLUE")
 
-    # Initialize drop positions
+    # Initialize drop positions - reduce on small screens
     declare -a drops
-    for ((i=0; i<TERM_WIDTH; i++)); do
+    local col_step=1
+    if [[ "$IS_SMALL_SCREEN" == "true" ]]; then
+        col_step=2  # Skip every other column on small screens
+    fi
+
+    for ((i=0; i<TERM_WIDTH; i+=col_step)); do
         drops[$i]=$((RANDOM % TERM_HEIGHT))
     done
 
     local end_time=$((SECONDS + duration))
+    local sleep_time=0.012
+    [[ "$IS_SMALL_SCREEN" == "true" ]] && sleep_time=0.02  # Slower on mobile
+
     while [[ $SECONDS -lt $end_time ]]; do
-        for ((col=0; col<TERM_WIDTH; col++)); do
+        for ((col=0; col<TERM_WIDTH; col+=col_step)); do
             local char="${chars:$((RANDOM % ${#chars})):1}"
             local color_idx=$((col % ${#colors[@]}))
             local color="${colors[$color_idx]}"
@@ -355,7 +405,7 @@ show_multicolor_matrix() {
                 drops[$col]=1
             fi
         done
-        sleep 0.012
+        sleep "$sleep_time"
     done
     printf "%b" "$RESET"
 }
@@ -473,6 +523,120 @@ show_security_sequence() {
     sleep 0.1
 }
 
+# ═══════════════════════════════════════════════════════════════════════════
+# SYSTEM STATS
+# ═══════════════════════════════════════════════════════════════════════════
+
+get_system_stats() {
+    local cpu_usage="N/A"
+    local ram_usage="N/A"
+
+    # Get CPU usage
+    case "$PLATFORM" in
+        macos)
+            # macOS: use top to get CPU idle percentage
+            local cpu_idle=$(top -l 1 -n 0 2>/dev/null | grep "CPU usage" | awk '{print $7}' | sed 's/%//')
+            if [[ -n "$cpu_idle" ]]; then
+                cpu_usage=$((100 - cpu_idle))
+            fi
+            ;;
+        linux)
+            # Linux: use top or /proc/stat
+            if command -v top &>/dev/null; then
+                local cpu_idle=$(top -bn1 | grep "Cpu(s)" | awk '{print $8}' | sed 's/%id,//' | cut -d'.' -f1)
+                if [[ -n "$cpu_idle" ]]; then
+                    cpu_usage=$((100 - cpu_idle))
+                fi
+            fi
+            ;;
+        termux)
+            # Termux: use /proc/stat if available
+            if [[ -r /proc/stat ]]; then
+                local cpu_data=($(head -n1 /proc/stat | awk '{print $2, $3, $4, $5}'))
+                local total=$((cpu_data[0] + cpu_data[1] + cpu_data[2] + cpu_data[3]))
+                local idle=${cpu_data[3]}
+                if [[ $total -gt 0 ]]; then
+                    cpu_usage=$(( (total - idle) * 100 / total ))
+                fi
+            fi
+            ;;
+    esac
+
+    # Get RAM usage
+    case "$PLATFORM" in
+        macos)
+            # macOS: use vm_stat
+            if command -v vm_stat &>/dev/null; then
+                local pages_free=$(vm_stat | grep "Pages free" | awk '{print $3}' | sed 's/\.//')
+                local pages_active=$(vm_stat | grep "Pages active" | awk '{print $3}' | sed 's/\.//')
+                local pages_inactive=$(vm_stat | grep "Pages inactive" | awk '{print $3}' | sed 's/\.//')
+                local pages_wired=$(vm_stat | grep "Pages wired down" | awk '{print $4}' | sed 's/\.//')
+                if [[ -n "$pages_free" ]] && [[ -n "$pages_active" ]]; then
+                    local total_pages=$((pages_free + pages_active + pages_inactive + pages_wired))
+                    local used_pages=$((pages_active + pages_wired))
+                    if [[ $total_pages -gt 0 ]]; then
+                        ram_usage=$((used_pages * 100 / total_pages))
+                    fi
+                fi
+            fi
+            ;;
+        linux|termux)
+            # Linux/Termux: use /proc/meminfo
+            if [[ -r /proc/meminfo ]]; then
+                local mem_total=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+                local mem_available=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+                if [[ -n "$mem_total" ]] && [[ -n "$mem_available" ]] && [[ $mem_total -gt 0 ]]; then
+                    local mem_used=$((mem_total - mem_available))
+                    ram_usage=$((mem_used * 100 / mem_total))
+                fi
+            fi
+            ;;
+    esac
+
+    echo "$cpu_usage $ram_usage"
+}
+
+write_usage_bar() {
+    local indent="$1"
+    local label="$2"
+    local usage="$3"
+    local width="${4:-30}"
+
+    # Skip if usage is N/A
+    if [[ "$usage" == "N/A" ]]; then
+        return
+    fi
+
+    # Determine color based on usage
+    local bar_color="$NEON_GREEN"
+    if [[ $usage -gt 80 ]]; then
+        bar_color="$BLOOD_RED"
+    elif [[ $usage -gt 60 ]]; then
+        bar_color="$ORANGE"
+    fi
+
+    # Calculate filled and empty blocks
+    local filled=$((usage * width / 100))
+    [[ $filled -gt $width ]] && filled=$width
+    [[ $filled -lt 0 ]] && filled=0
+    local empty=$((width - filled))
+
+    # Build bar
+    local bar=""
+    for ((i=0; i<filled; i++)); do
+        bar+="$BLOCK"
+    done
+    for ((i=0; i<empty; i++)); do
+        bar+="$BLOCK_EMPTY"
+    done
+
+    printf "%s%b%s %b%-8s%b %b%s%b %b%3d%%%b\n" \
+        "$indent" "$PRIMARY" "$VLINE" \
+        "$WHITE" "$label" "$RESET" \
+        "$bar_color" "$bar" "$RESET" \
+        "$WHITE" "$usage" "$RESET"
+}
+
 show_dashboard() {
     clear_screen
     get_terminal_size
@@ -545,6 +709,18 @@ show_dashboard() {
             $((box_width - 8 - ${#datetime})) "" "$PRIMARY" "$VLINE" "$RESET"
 
         echo "${indent}${PRIMARY}${T_LEFT}${hline}${T_RIGHT}${RESET}"
+
+        # System stats (CPU and RAM)
+        local stats=($(get_system_stats))
+        local cpu_usage="${stats[0]}"
+        local ram_usage="${stats[1]}"
+
+        # Display CPU and RAM bars if available
+        if [[ "$cpu_usage" != "N/A" ]] || [[ "$ram_usage" != "N/A" ]]; then
+            write_usage_bar "$indent" "$CPU CPU" "$cpu_usage" 30
+            write_usage_bar "$indent" "$RAM RAM" "$ram_usage" 30
+            echo "${indent}${PRIMARY}${T_LEFT}${hline}${T_RIGHT}${RESET}"
+        fi
     fi
 
     # Quote
@@ -690,6 +866,9 @@ phantom-theme() {
 }
 
 phantom-update() {
+    load_config
+    get_cache
+
     echo "${NEON_CYAN}Checking for updates...${RESET}"
 
     if ! command -v curl &> /dev/null; then
@@ -697,11 +876,37 @@ phantom-update() {
         return 1
     fi
 
-    local latest_version=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest" | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"v\?\(.*\)"/\1/')
+    # Check cache to avoid too frequent API calls
+    local now=$(date +%s)
+    local cache_valid=false
+    if [[ -n "$LAST_UPDATE_CHECK" ]]; then
+        local last_check_ts=$(date -d "$LAST_UPDATE_CHECK" +%s 2>/dev/null || date -j -f "%Y-%m-%d %H:%M:%S" "$LAST_UPDATE_CHECK" +%s 2>/dev/null || echo "0")
+        local days_since=$(( (now - last_check_ts) / 86400 ))
+        if [[ $days_since -lt $UPDATE_CHECK_DAYS ]]; then
+            cache_valid=true
+        fi
+    fi
 
-    if [[ -z "$latest_version" ]]; then
-        echo "${BLOOD_RED}Failed to check for updates.${RESET}"
-        return 1
+    # Use cached result if valid
+    if [[ "$cache_valid" == "true" ]] && [[ -n "$LATEST_VERSION" ]]; then
+        echo "${DARK_GRAY}Using cached result (checked recently)${RESET}"
+        local latest_version="$LATEST_VERSION"
+    else
+        # Query GitHub API
+        local latest_version=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest" | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"v\?\(.*\)"/\1/')
+
+        if [[ -z "$latest_version" ]]; then
+            echo "${BLOOD_RED}Failed to check for updates.${RESET}"
+            return 1
+        fi
+
+        # Save to cache
+        local check_time=$(date '+%Y-%m-%d %H:%M:%S')
+        local is_update_available=false
+        if [[ "$latest_version" > "$SCRIPT_VERSION" ]]; then
+            is_update_available=true
+        fi
+        save_cache "$check_time" "$latest_version" "$is_update_available"
     fi
 
     if [[ "$latest_version" > "$SCRIPT_VERSION" ]]; then
@@ -718,6 +923,147 @@ phantom-update() {
     else
         echo "${NEON_GREEN}Already on latest version (v$SCRIPT_VERSION)${RESET}"
     fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EASTER EGGS
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Initialize secrets tracking
+declare -a SECRETS_FOUND=()
+SECRETS_FILE="$CONFIG_DIR/.secrets"
+
+# Load discovered secrets
+if [[ -f "$SECRETS_FILE" ]]; then
+    mapfile -t SECRETS_FOUND < "$SECRETS_FILE"
+fi
+
+save_secret() {
+    local secret="$1"
+    if [[ ! " ${SECRETS_FOUND[@]} " =~ " ${secret} " ]]; then
+        SECRETS_FOUND+=("$secret")
+        printf "%s\n" "${SECRETS_FOUND[@]}" > "$SECRETS_FILE"
+    fi
+}
+
+phantom-chosen() {
+    load_config
+    get_theme_colors
+    clear_screen
+    echo ""
+    echo ""
+    write_centered "╔════════════════════════════════════════╗" "$PRIMARY"
+    write_centered "║                                        ║" "$PRIMARY"
+    write_centered "║     ${GOLD}✦ THE CHOSEN ONE ✦${PRIMARY}          ║" "$PRIMARY"
+    write_centered "║                                        ║" "$PRIMARY"
+    write_centered "╚════════════════════════════════════════╝" "$PRIMARY"
+    echo ""
+    write_centered "You have been granted access." "$SECONDARY"
+    write_centered "Power. Knowledge. Control." "$ACCENT"
+    echo ""
+    write_centered "The path is now open." "$GRAY"
+    echo ""
+
+    save_secret "chosen"
+}
+
+phantom-2829() {
+    load_config
+    get_theme_colors
+    clear_screen
+    hide_cursor
+
+    echo ""
+    echo ""
+    sleep 0.3
+    write_centered "Initializing..." "$DARK_GRAY"
+    sleep 0.5
+    clear_screen
+    echo ""
+    echo ""
+
+    write_centered "╔══════════════════════════════════════════════════╗" "$PRIMARY"
+    write_centered "║                                                  ║" "$PRIMARY"
+    write_centered "║          ${NEON_PURPLE}⚡ CREATOR'S MARK ⚡${PRIMARY}                 ║" "$PRIMARY"
+    write_centered "║                                                  ║" "$PRIMARY"
+    write_centered "╚══════════════════════════════════════════════════╝" "$PRIMARY"
+    echo ""
+    sleep 0.5
+
+    write_centered "${NEON_CYAN}@unknownlll2829${RESET}" "$WHITE"
+    sleep 0.3
+    write_centered "Master of Terminals, Architect of Code" "$GRAY"
+    sleep 0.3
+    echo ""
+    write_centered "${HOT_PINK}⟨ The Phantom That Never Sleeps ⟩${RESET}" "$HOT_PINK"
+    sleep 0.5
+    echo ""
+
+    write_centered "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" "$DARK_GRAY"
+    echo ""
+    write_centered "${GOLD}\"In the shadows, we code...\"${RESET}" "$GOLD"
+    echo ""
+    write_centered "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" "$DARK_GRAY"
+    sleep 0.5
+    echo ""
+    echo ""
+
+    write_centered "${NEON_GREEN}✓ Secret Unlocked${RESET}" "$NEON_GREEN"
+    echo ""
+
+    show_cursor
+    save_secret "2829"
+}
+
+phantom-secrets() {
+    load_config
+    get_theme_colors
+    clear_screen
+
+    echo ""
+    echo ""
+    write_centered "╔════════════════════════════════════════╗" "$PRIMARY"
+    write_centered "║                                        ║" "$PRIMARY"
+    write_centered "║     ${GOLD}🔍 SECRET HUNTER 🔍${PRIMARY}          ║" "$PRIMARY"
+    write_centered "║                                        ║" "$PRIMARY"
+    write_centered "╚════════════════════════════════════════╝" "$PRIMARY"
+    echo ""
+
+    local total_secrets=3
+    local found_count=${#SECRETS_FOUND[@]}
+
+    write_centered "Secrets Found: ${NEON_GREEN}$found_count${RESET} / ${GOLD}$total_secrets${RESET}" "$WHITE"
+    echo ""
+    echo ""
+
+    # Display found secrets
+    if [[ $found_count -gt 0 ]]; then
+        write_centered "${NEON_CYAN}━━━ Discovered ━━━${RESET}" "$NEON_CYAN"
+        echo ""
+        for secret in "${SECRETS_FOUND[@]}"; do
+            case "$secret" in
+                chosen) write_centered "${NEON_GREEN}✓${RESET} phantom-chosen - The Chosen One" "$WHITE" ;;
+                2829) write_centered "${NEON_GREEN}✓${RESET} phantom-2829 - Creator's Mark" "$WHITE" ;;
+                secrets) write_centered "${NEON_GREEN}✓${RESET} phantom-secrets - You found me!" "$WHITE" ;;
+            esac
+        done
+        echo ""
+    fi
+
+    # Check if all found
+    if [[ $found_count -eq $total_secrets ]]; then
+        echo ""
+        write_centered "${GOLD}⚡ ACHIEVEMENT UNLOCKED ⚡${RESET}" "$GOLD"
+        write_centered "Master Secret Hunter" "$ACCENT"
+        echo ""
+        write_centered "You've discovered all hidden commands!" "$GRAY"
+        echo ""
+    else
+        write_centered "${DARK_GRAY}Hint: Hidden commands start with 'phantom-'${RESET}" "$DARK_GRAY"
+        echo ""
+    fi
+
+    save_secret "secrets"
 }
 
 # Unknown theme aliases

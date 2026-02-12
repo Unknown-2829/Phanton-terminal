@@ -107,11 +107,18 @@ echo "  ${GREEN}[+]${WHITE} Profile: $PROFILE${R}"
 echo ""
 
 # Confirmation
-read -p "  ${GOLD}Continue installation? [Y/n]:${R} " confirm
-confirm=${confirm:-Y}
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "  ${RED}Installation cancelled.${R}"
-    exit 0
+if [[ -t 0 ]]; then
+    # Interactive mode
+    read -p "  ${GOLD}Continue installation? [Y/n]:${R} " confirm
+    confirm=${confirm:-Y}
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "  ${RED}Installation cancelled.${R}"
+        exit 0
+    fi
+else
+    # Non-interactive mode (piped input)
+    echo "  ${GOLD}Running in non-interactive mode (auto-confirming)${R}"
+    confirm="Y"
 fi
 echo ""
 
@@ -163,13 +170,25 @@ fi
 # INSTALLATION WIZARD
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Detect if running in non-interactive mode
+NON_INTERACTIVE=false
+if [[ ! -t 0 ]]; then
+    NON_INTERACTIVE=true
+    echo "  ${GOLD}[i] Non-interactive mode: using defaults${R}"
+    echo ""
+fi
+
 # Theme
 echo "  ${GOLD}[1] THEME${R}"
 d1="1"
 [[ "$THEME" == "Unknown" ]] && d1="2"
 echo "  ${PURPLE}[1] Phantom${R}  ${GREEN}[2] Unknown${R}  ${DGRAY}(current: $THEME)${R}"
-read -p "  Choice [Enter=$d1]: " choice
-choice=${choice:-$d1}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Choice [Enter=$d1]: " choice
+    choice=${choice:-$d1}
+else
+    choice=$d1
+fi
 [[ "$choice" == "2" ]] && THEME="Unknown" || THEME="Phantom"
 echo "  ${GREEN}→ $THEME${R}"
 echo ""
@@ -179,8 +198,12 @@ echo "  ${GOLD}[2] MATRIX RAIN${R}"
 d2="1"
 [[ "$MATRIX_MODE" == "Binary" ]] && d2="2"
 echo "  ${CYAN}[1] Letters${R}  ${GREEN}[2] Binary${R}  ${DGRAY}(current: $MATRIX_MODE)${R}"
-read -p "  Choice [Enter=$d2]: " choice
-choice=${choice:-$d2}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Choice [Enter=$d2]: " choice
+    choice=${choice:-$d2}
+else
+    choice=$d2
+fi
 [[ "$choice" == "2" ]] && MATRIX_MODE="Binary" || MATRIX_MODE="Letters"
 echo "  ${GREEN}→ $MATRIX_MODE${R}"
 echo ""
@@ -190,8 +213,12 @@ echo "  ${GOLD}[3] PROMPT PATH${R}"
 d3="1"
 [[ "$SHOW_FULL_PATH" == "false" ]] && d3="2"
 echo "  ${CYAN}[1] Full path${R}  ${BLUE}[2] Folder only${R}  ${DGRAY}(current: $([ "$SHOW_FULL_PATH" == "true" ] && echo "Full" || echo "Folder"))${R}"
-read -p "  Choice [Enter=$d3]: " choice
-choice=${choice:-$d3}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Choice [Enter=$d3]: " choice
+    choice=${choice:-$d3}
+else
+    choice=$d3
+fi
 [[ "$choice" == "2" ]] && SHOW_FULL_PATH=false || SHOW_FULL_PATH=true
 echo "  ${GREEN}→ $([ "$SHOW_FULL_PATH" == "true" ] && echo "Full path" || echo "Folder only")${R}"
 echo ""
@@ -201,20 +228,32 @@ echo "  ${GOLD}[4] OPTIONS${R}"
 
 dS="Y"
 [[ "$SHOW_SYSTEM_INFO" == "false" ]] && dS="n"
-read -p "  Show system info? [Y/n, Enter=$dS]: " choice
-choice=${choice:-$dS}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Show system info? [Y/n, Enter=$dS]: " choice
+    choice=${choice:-$dS}
+else
+    choice=$dS
+fi
 [[ "$choice" =~ ^[Nn]$ ]] && SHOW_SYSTEM_INFO=false || SHOW_SYSTEM_INFO=true
 
 dG="Y"
 [[ "$GRADIENT_TEXT" == "false" ]] && dG="n"
-read -p "  Gradient logo? [Y/n, Enter=$dG]: " choice
-choice=${choice:-$dG}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Gradient logo? [Y/n, Enter=$dG]: " choice
+    choice=${choice:-$dG}
+else
+    choice=$dG
+fi
 [[ "$choice" =~ ^[Nn]$ ]] && GRADIENT_TEXT=false || GRADIENT_TEXT=true
 
 dA="Y"
 [[ "$AUTO_UPDATE" == "false" ]] && dA="n"
-read -p "  Auto-update? [Y/n, Enter=$dA]: " choice
-choice=${choice:-$dA}
+if [[ "$NON_INTERACTIVE" == "false" ]]; then
+    read -p "  Auto-update? [Y/n, Enter=$dA]: " choice
+    choice=${choice:-$dA}
+else
+    choice=$dA
+fi
 [[ "$choice" =~ ^[Nn]$ ]] && AUTO_UPDATE=false || AUTO_UPDATE=true
 
 echo ""
