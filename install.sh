@@ -59,7 +59,7 @@ R="${E}[0m"
 # ═══════════════════════════════════════════════════════════════════════════
 
 detect_platform() {
-    if [[ "$OSTYPE" == "linux-android"* ]] || [[ -n "$TERMUX_VERSION" ]]; then
+    if [[ "$OSTYPE" == "linux-android"* ]] || [[ -n "${TERMUX_VERSION:-}" ]]; then
         echo "termux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         echo "macos"
@@ -83,10 +83,10 @@ INSTALL_PATH="$CONFIG_DIR/PhantomStartup.sh"
 
 # Detect shell and profile
 detect_shell_profile() {
-    if [[ -n "$ZSH_VERSION" ]]; then
+    if [[ -n "${ZSH_VERSION:-}" ]]; then
         SHELL_TYPE="zsh"
         PROFILE="$HOME/.zshrc"
-    elif [[ -n "$BASH_VERSION" ]]; then
+    elif [[ -n "${BASH_VERSION:-}" ]]; then
         SHELL_TYPE="bash"
         if [[ "$PLATFORM" == "macos" ]]; then
             # macOS prefers .bash_profile
