@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Phantom Terminal - Universal Installer v3.6.0
+# Phantom Terminal - Universal Installer v3.6.1
 # Cross-platform installer with automatic platform detection
 # Supports: Linux, macOS, Termux (Android)
 #
@@ -9,7 +9,34 @@
 #   wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
 #
 
-set -e
+# Don't use set -e to allow better error handling
+set -u
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ERROR HANDLING
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Global error flag
+INSTALL_ERRORS=0
+
+# Error handler
+handle_error() {
+    local msg="$1"
+    echo "  ${RED}[ERROR]${R} $msg" >&2
+    INSTALL_ERRORS=$((INSTALL_ERRORS + 1))
+}
+
+# Cleanup function
+cleanup_on_error() {
+    if [[ $INSTALL_ERRORS -gt 0 ]]; then
+        echo ""
+        echo "  ${RED}Installation encountered $INSTALL_ERRORS error(s).${R}"
+        echo "  ${GOLD}Please check the messages above and try again.${R}"
+        exit 1
+    fi
+}
+
+trap cleanup_on_error EXIT
 
 # ═══════════════════════════════════════════════════════════════════════════
 # COLORS
@@ -104,6 +131,13 @@ esac
 
 echo "  ${GREEN}[+]${WHITE} Shell: $SHELL_TYPE${R}"
 echo "  ${GREEN}[+]${WHITE} Profile: $PROFILE${R}"
+
+# Verify we can write to necessary locations
+if [[ ! -w "$HOME" ]]; then
+    handle_error "Cannot write to home directory: $HOME"
+    exit 1
+fi
+
 echo ""
 
 # Confirmation
@@ -277,24 +311,56 @@ if [[ ${#missing_deps[@]} -gt 0 ]]; then
 
     if [[ "$PLATFORM" == "termux" ]]; then
         echo "  ${GRAY}Installing with pkg...${R}"
-        pkg install -y "${missing_deps[@]}" 2>/dev/null || echo "  ${RED}[!] Failed to install some dependencies${R}"
+        if pkg install -y "${missing_deps[@]}" 2>&1 | grep -v "^$"; then
+            echo "  ${GREEN}[+]${WHITE} Dependencies installed${R}"
+        else
+            echo "  ${RED}[!]${WHITE} Failed to install some dependencies${R}"
+            echo "  ${GOLD}[!]${WHITE} Please run manually: pkg install ${missing_deps[*]}${R}"
+        fi
     elif [[ "$PLATFORM" == "macos" ]]; then
         if command -v brew &> /dev/null; then
             echo "  ${GRAY}Installing with Homebrew...${R}"
-            brew install "${missing_deps[@]}" 2>/dev/null || echo "  ${RED}[!] Failed to install some dependencies${R}"
+            if brew install "${missing_deps[@]}" 2>&1 | tail -3; then
+                echo "  ${GREEN}[+]${WHITE} Dependencies installed${R}"
+            else
+                echo "  ${RED}[!]${WHITE} Failed to install some dependencies${R}"
+                echo "  ${GOLD}[!]${WHITE} Please run manually: brew install ${missing_deps[*]}${R}"
+            fi
         else
-            echo "  ${GOLD}[!] Please install: ${missing_deps[*]}${R}"
+            echo "  ${GOLD}[!] Please install Homebrew and run: brew install ${missing_deps[*]}${R}"
         fi
     elif [[ "$PLATFORM" == "linux" ]]; then
         if command -v apt-get &> /dev/null; then
             echo "  ${GRAY}Installing with apt-get...${R}"
-            sudo apt-get update -qq && sudo apt-get install -y "${missing_deps[@]}" 2>/dev/null || echo "  ${RED}[!] Failed to install some dependencies${R}"
+            if sudo apt-get update -qq 2>&1 && sudo apt-get install -y "${missing_deps[@]}" 2>&1 | tail -3; then
+                echo "  ${GREEN}[+]${WHITE} Dependencies installed${R}"
+            else
+                echo "  ${RED}[!]${WHITE} Failed to install some dependencies${R}"
+                echo "  ${GOLD}[!]${WHITE} Please run manually: sudo apt-get install ${missing_deps[*]}${R}"
+            fi
         elif command -v yum &> /dev/null; then
             echo "  ${GRAY}Installing with yum...${R}"
-            sudo yum install -y "${missing_deps[@]}" 2>/dev/null || echo "  ${RED}[!] Failed to install some dependencies${R}"
+            if sudo yum install -y "${missing_deps[@]}" 2>&1 | tail -3; then
+                echo "  ${GREEN}[+]${WHITE} Dependencies installed${R}"
+            else
+                echo "  ${RED}[!]${WHITE} Failed to install some dependencies${R}"
+                echo "  ${GOLD}[!]${WHITE} Please run manually: sudo yum install ${missing_deps[*]}${R}"
+            fi
         else
             echo "  ${GOLD}[!] Please install: ${missing_deps[*]}${R}"
         fi
+    fi
+
+    # Verify dependencies are now available
+    still_missing=()
+    for dep in "${missing_deps[@]}"; do
+        command -v "$dep" &> /dev/null || still_missing+=("$dep")
+    done
+
+    if [[ ${#still_missing[@]} -gt 0 ]]; then
+        handle_error "Still missing required dependencies: ${still_missing[*]}"
+        echo "  ${GOLD}Installation cannot continue without: ${still_missing[*]}${R}"
+        exit 1
     fi
 fi
 
@@ -310,37 +376,101 @@ echo "  ${GREEN}[+] Dependencies checked${R}"
 
 # Download
 echo "  ${CYAN}[2/4]${WHITE} Downloading...${R}"
-mkdir -p "$CONFIG_DIR"
 
-if ! curl -fsSL "$REPO_URL/PhantomStartup.sh" -o "$INSTALL_PATH"; then
-    echo "  ${RED}[x] Download failed${R}"
+# Create config directory with error checking
+if ! mkdir -p "$CONFIG_DIR" 2>/dev/null; then
+    handle_error "Failed to create config directory: $CONFIG_DIR"
     exit 1
 fi
 
-chmod +x "$INSTALL_PATH"
-echo "  ${GREEN}[+] Downloaded${R}"
+# Download with retry logic
+MAX_RETRIES=3
+RETRY_COUNT=0
+DOWNLOAD_SUCCESS=false
+
+while [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; do
+    if curl -fsSL --connect-timeout 10 --max-time 30 "$REPO_URL/PhantomStartup.sh" -o "$INSTALL_PATH" 2>/dev/null; then
+        DOWNLOAD_SUCCESS=true
+        break
+    else
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; then
+            echo "  ${GOLD}[!]${WHITE} Download failed, retrying ($RETRY_COUNT/$MAX_RETRIES)...${R}"
+            sleep 2
+        fi
+    fi
+done
+
+if [[ "$DOWNLOAD_SUCCESS" != "true" ]]; then
+    handle_error "Failed to download PhantomStartup.sh after $MAX_RETRIES attempts"
+    echo "  ${GOLD}[!]${WHITE} Please check your internet connection and try again${R}"
+    echo "  ${GOLD}[!]${WHITE} Or download manually from: $REPO_URL/PhantomStartup.sh${R}"
+    exit 1
+fi
+
+# Verify downloaded file
+if [[ ! -f "$INSTALL_PATH" ]] || [[ ! -s "$INSTALL_PATH" ]]; then
+    handle_error "Downloaded file is missing or empty"
+    exit 1
+fi
+
+# Verify it's a valid shell script
+if ! head -1 "$INSTALL_PATH" | grep -q "^#!.*bash"; then
+    handle_error "Downloaded file is not a valid bash script"
+    rm -f "$INSTALL_PATH"
+    exit 1
+fi
+
+if ! chmod +x "$INSTALL_PATH" 2>/dev/null; then
+    handle_error "Failed to make script executable"
+    exit 1
+fi
+
+echo "  ${GREEN}[+] Downloaded and verified${R}"
 
 # Profile
 echo "  ${CYAN}[3/4]${WHITE} Updating profile ($PROFILE)...${R}"
 
 # Create profile if it doesn't exist
-touch "$PROFILE"
+if ! touch "$PROFILE" 2>/dev/null; then
+    handle_error "Cannot write to profile: $PROFILE"
+    exit 1
+fi
 
-# Add to profile
-cat >> "$PROFILE" <<EOF
+# Check if already added to avoid duplicates
+if grep -q "Phantom Terminal" "$PROFILE" 2>/dev/null; then
+    echo "  ${GRAY}[i] Phantom Terminal already in profile, skipping${R}"
+else
+    # Create backup before modifying
+    if [[ -f "$PROFILE" ]]; then
+        cp "$PROFILE" "${PROFILE}.phantom-backup" 2>/dev/null || true
+    fi
+
+    # Add to profile with error checking
+    if cat >> "$PROFILE" <<EOF
 
 # Phantom Terminal
 if [ -f "$INSTALL_PATH" ]; then
     source "$INSTALL_PATH"
 fi
 EOF
-
-echo "  ${GREEN}[+] Profile updated${R}"
+    then
+        echo "  ${GREEN}[+] Profile updated${R}"
+    else
+        handle_error "Failed to update profile"
+        # Restore backup if available
+        if [[ -f "${PROFILE}.phantom-backup" ]]; then
+            mv "${PROFILE}.phantom-backup" "$PROFILE" 2>/dev/null || true
+        fi
+        exit 1
+    fi
+fi
 
 # Config
 echo "  ${CYAN}[4/4]${WHITE} Saving config...${R}"
 
-cat > "$CONFIG_FILE" <<EOF
+# Save config with error checking
+if cat > "$CONFIG_FILE" <<EOF
 {
   "AnimationEnabled": true,
   "MatrixDuration": 2,
@@ -357,13 +487,29 @@ cat > "$CONFIG_FILE" <<EOF
   "UpdateCheckDays": 1
 }
 EOF
+then
+    # Verify config is valid JSON (if jq available)
+    if command -v jq &> /dev/null; then
+        if ! jq . "$CONFIG_FILE" > /dev/null 2>&1; then
+            handle_error "Generated invalid config JSON"
+            exit 1
+        fi
+    fi
+    echo "  ${GREEN}[+] Config saved${R}"
+else
+    handle_error "Failed to save config file"
+    exit 1
+fi
 
-echo "  ${GREEN}[+] Config saved${R}"
 echo ""
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SUCCESS
 # ═══════════════════════════════════════════════════════════════════════════
+
+# Clear error trap for successful completion
+trap - EXIT
+INSTALL_ERRORS=0
 
 echo "  ${GREEN}╔════════════════════════════════════════════════╗${R}"
 echo "  ${GREEN}║${WHITE}         INSTALLATION COMPLETE!              ${GREEN}║${R}"
@@ -381,6 +527,7 @@ case "$PLATFORM" in
     termux)
         echo "  ${CYAN}[Termux] Optimized for mobile display${R}"
         echo "  ${GRAY}Consider using Hacker's Keyboard for better experience${R}"
+        echo "  ${GRAY}Tip: Grant storage permission with 'termux-setup-storage'${R}"
         echo ""
         ;;
     macos)
@@ -388,3 +535,10 @@ case "$PLATFORM" in
         echo ""
         ;;
 esac
+
+# Final verification
+echo "  ${GRAY}Installation verified:${R}"
+echo "  ${GRAY}  - Script: $INSTALL_PATH${R}"
+echo "  ${GRAY}  - Config: $CONFIG_FILE${R}"
+echo "  ${GRAY}  - Profile: $PROFILE${R}"
+echo ""
