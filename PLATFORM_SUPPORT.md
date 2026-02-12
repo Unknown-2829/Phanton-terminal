@@ -250,6 +250,15 @@ source ~/.bashrc  # or ~/.zshrc
 type phantom-help
 ```
 
+**sed compatibility issues:**
+```bash
+# For Linux/Termux - use sed -i.bak
+sed -i.bak 's/old/new/' file
+
+# For macOS - use sed -i '.bak'
+sed -i '.bak' 's/old/new/' file
+```
+
 **jq not available:**
 - Config will still work but uses basic parsing
 - Install jq for better experience:

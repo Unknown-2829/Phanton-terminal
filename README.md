@@ -181,9 +181,14 @@ Remove-Item "$HOME\.phantom-terminal" -Recurse -Force -ErrorAction SilentlyConti
 
 ### Linux / macOS / Termux
 ```bash
-# Remove from profile
+# Remove from profile (Linux/Termux)
 sed -i.bak '/PhantomStartup\|Phantom Terminal/d' ~/.bashrc
 sed -i.bak '/PhantomStartup\|Phantom Terminal/d' ~/.zshrc
+
+# Remove from profile (macOS)
+sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' ~/.bashrc
+sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' ~/.zshrc
+sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' ~/.bash_profile
 
 # Delete files
 rm -rf ~/.phantom-terminal
