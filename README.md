@@ -1,30 +1,46 @@
 # 🔮 Phantom Terminal
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5.0-purple?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.6.0-purple?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/PowerShell-5.1%2B-blue?style=for-the-badge&logo=powershell" alt="PowerShell">
+  <img src="https://img.shields.io/badge/Bash-4.0%2B-green?style=for-the-badge&logo=gnu-bash" alt="Bash">
   <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows" alt="Windows">
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple" alt="macOS">
+  <img src="https://img.shields.io/badge/Termux-Android-32DE84?style=for-the-badge&logo=android" alt="Termux">
   <img src="https://img.shields.io/github/license/Unknown-2829/Phanton-terminal?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
-  <b>A cinematic startup animation for Windows Terminal / PowerShell</b><br>
-  Multi-color matrix rain • Two themes • Glitch effects • Custom dashboard
+  <b>A cinematic startup animation for your terminal</b><br>
+  Multi-color matrix rain • Two themes • Glitch effects • Custom dashboard<br>
+  <i>Cross-platform: Windows, Linux, macOS, Termux (Android)</i>
 </p>
 
 ---
 
 ## ⚡ One-Line Install
 
+### Windows (PowerShell)
 ```powershell
 irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
 ```
 
-Interactive installer lets you choose:
+### Linux / macOS / Termux
+```bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+```
+
+or with wget:
+```bash
+wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+```
+
+**Interactive installer lets you choose:**
 - **Theme** - Phantom (purple/cyan) or Unknown (green/blue)
 - **Matrix Mode** - Letters or Binary (0101...)
 - **Path Display** - Full path or folder only
-- **Options** - Gradient logo, auto-update
+- **Options** - Gradient logo, auto-update, system info display
 
 ---
 
@@ -119,6 +135,7 @@ Config file: `~\.phantom-terminal\config.json`
 
 ## 📦 Manual Installation
 
+### Windows (PowerShell)
 ```powershell
 # Download
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.ps1" -OutFile "$HOME\PhantomStartup.ps1"
@@ -130,10 +147,29 @@ Add-Content $PROFILE "`n. `"$HOME\PhantomStartup.ps1`""
 # Restart terminal
 ```
 
+### Linux / macOS / Termux
+```bash
+# Download
+mkdir -p ~/.phantom-terminal
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.sh -o ~/.phantom-terminal/PhantomStartup.sh
+chmod +x ~/.phantom-terminal/PhantomStartup.sh
+
+# Add to shell profile (choose based on your shell)
+# For Bash:
+echo -e '\n# Phantom Terminal\nif [ -f "$HOME/.phantom-terminal/PhantomStartup.sh" ]; then\n    source "$HOME/.phantom-terminal/PhantomStartup.sh"\nfi' >> ~/.bashrc
+
+# For Zsh:
+echo -e '\n# Phantom Terminal\nif [ -f "$HOME/.phantom-terminal/PhantomStartup.sh" ]; then\n    source "$HOME/.phantom-terminal/PhantomStartup.sh"\nfi' >> ~/.zshrc
+
+# Restart terminal or run:
+source ~/.bashrc  # or ~/.zshrc
+```
+
 ---
 
 ## 🗑️ Uninstall
 
+### Windows (PowerShell)
 ```powershell
 # Remove from profile
 (Get-Content $PROFILE) -notmatch 'PhantomStartup' | Set-Content $PROFILE
@@ -141,6 +177,16 @@ Add-Content $PROFILE "`n. `"$HOME\PhantomStartup.ps1`""
 # Delete files
 Remove-Item "$HOME\PhantomStartup.ps1" -Force -ErrorAction SilentlyContinue
 Remove-Item "$HOME\.phantom-terminal" -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+### Linux / macOS / Termux
+```bash
+# Remove from profile
+sed -i.bak '/PhantomStartup\|Phantom Terminal/d' ~/.bashrc
+sed -i.bak '/PhantomStartup\|Phantom Terminal/d' ~/.zshrc
+
+# Delete files
+rm -rf ~/.phantom-terminal
 ```
 
 ---
