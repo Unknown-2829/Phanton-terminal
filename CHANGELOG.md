@@ -5,6 +5,52 @@ All notable changes to Phantom Terminal will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-02-12
+
+### Added
+- **🌍 Cross-Platform Support**: Now works on Linux, macOS, and Termux (Android)!
+  - New Bash/Shell version (`PhantomStartup.sh`) with feature parity to PowerShell version
+  - All animations, themes, and effects ported to Unix-like systems
+  - Termux-optimized with mobile-friendly display options
+- **Universal Installer**: `install.sh` with automatic platform detection
+  - Auto-detects: Linux, macOS, Termux, or Windows
+  - Automatically selects appropriate shell profile (.bashrc, .zshrc, .bash_profile)
+  - Smart dependency installation for each platform
+  - Preserves existing configuration on reinstall
+- **Platform-Specific Optimizations**:
+  - Termux: ASCII fallback for better mobile compatibility
+  - macOS: Proper .bash_profile handling
+  - Linux: Support for multiple package managers (apt, yum, pkg)
+- **Enhanced README**:
+  - Installation instructions for all platforms
+  - Platform-specific badges
+  - Uninstall instructions for each OS
+
+### Changed
+- Version bumped to 3.6.0 to reflect major cross-platform milestone
+- Updated documentation to emphasize multi-platform support
+- Installer now more robust with better error handling
+
+### Technical Details
+- Bash version supports all PowerShell features:
+  - Matrix rain animation (Letters/Binary modes)
+  - Multi-color gradient effects
+  - Glitch reveal animations
+  - Security loading sequences
+  - Two themes (Phantom/Unknown)
+  - Custom prompt with git branch detection
+  - Dashboard with system information
+  - Configuration management with JSON
+  - Auto-update checking
+- Universal installer (`install.sh`):
+  - Platform detection via `$OSTYPE` and environment variables
+  - Shell detection (bash/zsh/sh)
+  - Automatic profile file selection
+  - Dependency checking and installation
+  - Config preservation across reinstalls
+
+---
+
 ## [3.5.0] - 2026-01-26
 
 ### Added
