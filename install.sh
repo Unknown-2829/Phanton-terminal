@@ -147,7 +147,12 @@ if [[ -f "$CONFIG_FILE" ]]; then
 
     # Clean previous profile entries
     if [[ -f "$PROFILE" ]]; then
-        sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$PROFILE" 2>/dev/null || true
+        # Use platform-compatible sed syntax
+        if [[ "$PLATFORM" == "macos" ]]; then
+            sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$PROFILE" 2>/dev/null || true
+        else
+            sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$PROFILE" 2>/dev/null || true
+        fi
     fi
 
     echo "  ${GREEN}[+]${WHITE} Ready${R}"
