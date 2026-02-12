@@ -106,6 +106,11 @@ curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/
 - Adjusted animation timings for mobile CPUs
 - Touch-friendly display layout
 - Reduced terminal width handling
+- **Performance optimizations for small screens:**
+  - Matrix animation duration reduced by 50%
+  - Column skipping (every other column) for smoother rendering
+  - Increased frame delay to reduce CPU load
+  - Auto-detection of screen size (<80 columns)
 
 **Recommended setup:**
 ```bash
@@ -130,7 +135,7 @@ curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/
 
 | Feature | Windows | Linux | macOS | Termux |
 |---------|---------|-------|-------|--------|
-| Matrix Animation | ✅ | ✅ | ✅ | ✅ |
+| Matrix Animation | ✅ | ✅ | ✅ | ✅ (Optimized) |
 | Binary Mode | ✅ | ✅ | ✅ | ✅ |
 | Glitch Effects | ✅ | ✅ | ✅ | ✅ |
 | Themes | ✅ | ✅ | ✅ | ✅ |
@@ -140,6 +145,11 @@ curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/
 | Auto-Update | ✅ | ✅ | ✅ | ✅ |
 | Config Persistence | ✅ | ✅ | ✅ | ✅ |
 | System Info | ✅ | ✅ | ✅ | ✅ |
+| CPU/RAM Stats | ✅ | ✅ | ✅ | ✅ |
+| Update Caching | ✅ | ✅ | ✅ | ✅ |
+| Easter Eggs | ✅ | ✅ | ✅ | ✅ |
+| Mobile Optimization | N/A | N/A | N/A | ✅ |
+| Smart Suggestions | ✅ (PSReadLine) | ⚠️ Manual | ⚠️ Manual | ⚠️ Manual |
 
 ---
 

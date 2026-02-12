@@ -73,10 +73,12 @@ wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/i
 | 🌧️ **Matrix Rain** | Letters or Binary mode with theme colors |
 | 🔐 **Security Loading** | Animated progress bars with glitch effects |
 | 💀 **Glitch Reveal** | Logo appears with glitch animation |
-| 📊 **Dashboard** | User, host, uptime, and random quotes |
+| 📊 **Dashboard** | User, host, uptime, CPU/RAM stats, and quotes |
 | 🎨 **Gradient Logo** | Multi-color gradient for logo display |
-| 🔄 **Auto-Update** | Silently downloads updates, notifies to reopen |
+| 🔄 **Auto-Update** | Smart caching, checks updates periodically |
 | ⚙️ **Persistent Config** | Settings preserved on reinstall |
+| 📱 **Mobile Optimized** | Termux-specific performance tweaks |
+| 🥚 **Easter Eggs** | Hidden commands with achievement tracking |
 
 ---
 
@@ -90,8 +92,13 @@ wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/i
 | `phantom-config -Edit` | Edit config in notepad |
 | `phantom-reload` | Replay startup animation |
 | `phantom-matrix` | Run matrix animation |
-| `phantom-dash` | Show dashboard |
-| `phantom-update` | Check for updates |
+| `phantom-dash` | Show dashboard with system stats |
+| `phantom-update` | Check for updates (with caching) |
+
+**Hidden Commands** (Easter Eggs 🥚):
+- `phantom-chosen` - Unlock "The Chosen One"
+- `phantom-2829` - Reveal the Creator's Mark
+- `phantom-secrets` - Secret hunter achievement tracker
 
 ---
 
