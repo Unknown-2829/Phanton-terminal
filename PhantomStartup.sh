@@ -517,8 +517,8 @@ show_dashboard() {
     local title="$SKULL $TITLE v$SCRIPT_VERSION $SKULL"
     local title_pad=$((box_width - ${#title} - 4))
     [[ $title_pad -lt 0 ]] && title_pad=0
-    printf "%s%b%s %b%s%$(title_pad)s%b%s%b\n" "$indent" "$PRIMARY" "$VLINE" \
-        "$SECONDARY" "$title" "" "$PRIMARY" "$VLINE" "$RESET"
+    printf "%s%b%s %b%s%*s%b%s%b\n" "$indent" "$PRIMARY" "$VLINE" \
+        "$SECONDARY" "$title" "$title_pad" "" "$PRIMARY" "$VLINE" "$RESET"
 
     echo "${indent}${PRIMARY}${T_LEFT}${hline}${T_RIGHT}${RESET}"
 
@@ -552,8 +552,8 @@ show_dashboard() {
     local quote="${QUOTES[$quote_idx]}"
     local quote_pad=$((box_width - ${#quote} - 4))
     [[ $quote_pad -lt 0 ]] && quote_pad=0
-    printf "%s%b%s %b%s%$(quote_pad)s%b%s%b\n" "$indent" "$PRIMARY" "$VLINE" \
-        "$GRAY" "$quote" "" "$PRIMARY" "$VLINE" "$RESET"
+    printf "%s%b%s %b%s%*s%b%s%b\n" "$indent" "$PRIMARY" "$VLINE" \
+        "$GRAY" "$quote" "$quote_pad" "" "$PRIMARY" "$VLINE" "$RESET"
 
     echo "${indent}${PRIMARY}${BOTTOM_LEFT}${hline}${BOTTOM_RIGHT}${RESET}"
     echo ""
