@@ -4,9 +4,20 @@
 # PowerShell temp files
 *.ps1.bak
 
+# Bash temp files
+*.sh.bak
+*.bak
+
 # Windows
 Thumbs.db
 desktop.ini
+
+# macOS
+.DS_Store
+._*
+
+# Linux
+*~
 
 # IDE
 .vscode/
@@ -19,3 +30,4 @@ desktop.ini
 # Test files
 test/
 *.test.ps1
+*.test.sh

@@ -191,6 +191,18 @@ rm -rf ~/.phantom-terminal
 
 ---
 
+## 🌍 Platform Support
+
+Phantom Terminal supports:
+- ✅ **Windows** 10/11 (PowerShell 5.1+)
+- ✅ **Linux** (Bash 4.0+, various distributions)
+- ✅ **macOS** (Catalina+, both Bash and Zsh)
+- ✅ **Termux** (Android, optimized for mobile)
+
+📖 **[View detailed platform support guide](PLATFORM_SUPPORT.md)** - Installation notes, requirements, and troubleshooting for each platform.
+
+---
+
 ## 📄 License
 
 MIT License - feel free to modify and share!
