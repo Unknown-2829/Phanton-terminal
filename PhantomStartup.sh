@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 #
-# Phantom Terminal - v3.7.0 - Cross-Platform Edition
-# Windows-parity animation for Linux, macOS, Termux
+# Phantom Terminal - Advanced Bash Startup Animation v3.6.1
+# Cinematic startup animation with multiple themes, effects, and customization.
+# Features: Matrix/Binary rain, gradients, themes.
+#
 # Creator: @unknownlll2829 (Telegram)
 # GitHub: https://github.com/Unknown-2829/Phanton-terminal
-# Cross-platform fix: Claude (Anthropic)
+# Version: 3.6.1
 #
 # Platforms: Linux (Ubuntu/Debian/Arch/Fedora), macOS, Termux (Android)
 # Requires: bash 4.0+, standard coreutils
 #
-
-SCRIPT_VERSION="3.7.0"
+# ═══════════════════════════════════════════════════════════════════════════
+# VERSION & PATHS
+# ═══════════════════════════════════════════════════════════════════════════
+SCRIPT_VERSION="3.6.1"
 REPO_OWNER="Unknown-2829"
 REPO_NAME="Phanton-terminal"
 CONFIG_DIR="$HOME/.phantom-terminal"
