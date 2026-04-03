@@ -624,7 +624,12 @@ show_dashboard() {
         local inner=$(( box_width - 2 ))
         local content="  ${lbl}${val}"
         local rpad=$(( inner - ${#content} ))
-        [[ $rpad -lt 0 ]] && { val="${val:0:$(( ${#val} + rpad ))}"; rpad=0; }
+        if [[ $rpad -lt 0 ]]; then
+            local truncate_len=$(( ${#val} + rpad ))
+            [[ $truncate_len -lt 0 ]] && truncate_len=0
+            val="${val:0:$truncate_len}"
+            rpad=0
+        fi
         printf "%s%b%s%b  %b%s%b%b%s%b%*s%b%s%b\n" \
             "$ind" "$PRIMARY" "$VLINE" \
             "$WHITE" "$WHITE" "$lbl" "$RESET" \
