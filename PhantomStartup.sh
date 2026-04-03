@@ -129,8 +129,11 @@ load_config() {
             v=$(_cfg ShowSystemInfo);    [[ -n "$v" ]] && SHOW_SYSTEM_INFO="$v"
             v=$(_cfg ShowFullPath);      [[ -n "$v" ]] && SHOW_FULL_PATH="$v"
             v=$(_cfg GradientText);      [[ -n "$v" ]] && GRADIENT_TEXT="$v"
+            v=$(_cfg SmartSuggestions);  [[ -n "$v" ]] && SMART_SUGGESTIONS="$v"
             v=$(_cfg Theme);             [[ -n "$v" ]] && THEME="$v"
             v=$(_cfg AutoCheckUpdates);  [[ -n "$v" ]] && AUTO_CHECK_UPDATES="$v"
+            v=$(_cfg SilentUpdate);      [[ -n "$v" ]] && SILENT_UPDATE="$v"
+            v=$(_cfg UpdateCheckDays);   [[ -n "$v" ]] && UPDATE_CHECK_DAYS="$v"
         fi
     fi
 }
