@@ -1,4 +1,4 @@
-# Cross-Platform Improvements v3.6.1
+# Cross-Platform Improvements v3.7.0
 
 ## Overview
 
@@ -294,7 +294,7 @@ No action required! The update is backward compatible:
 
 Simply run the installer:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 The installer now supports:
@@ -332,6 +332,6 @@ The codebase is now production-ready for all supported platforms: Windows, Linux
 
 ---
 
-**Version:** 3.6.1
+**Version:** 3.7.0
 **Date:** 2026-02-12
 **Status:** ✅ Complete

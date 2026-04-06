@@ -1,14 +1,14 @@
 # 🔮 Phantom Terminal
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.6.1-purple?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.7.0-purple?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/PowerShell-5.1%2B-blue?style=for-the-badge&logo=powershell" alt="PowerShell">
   <img src="https://img.shields.io/badge/Bash-4.0%2B-green?style=for-the-badge&logo=gnu-bash" alt="Bash">
   <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows" alt="Windows">
   <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux">
   <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple" alt="macOS">
   <img src="https://img.shields.io/badge/Termux-Android-32DE84?style=for-the-badge&logo=android" alt="Termux">
-  <img src="https://img.shields.io/github/license/Unknown-2829/Phanton-terminal?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/github/license/Unknown-2829/Phantom-terminal?style=for-the-badge" alt="License">
 </p>
 
 <p align="center">
@@ -23,17 +23,17 @@
 
 ### Windows (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.ps1 | iex
 ```
 
 ### Linux / macOS / Termux
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 or with wget:
 ```bash
-wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 **Interactive installer lets you choose:**
@@ -145,7 +145,7 @@ Config file: `~\.phantom-terminal\config.json`
 ### Windows (PowerShell)
 ```powershell
 # Download
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.ps1" -OutFile "$HOME\PhantomStartup.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/PhantomStartup.ps1" -OutFile "$HOME\PhantomStartup.ps1"
 
 # Add to profile
 if (!(Test-Path $PROFILE)) { New-Item -Path $PROFILE -Force }
@@ -158,7 +158,7 @@ Add-Content $PROFILE "`n. `"$HOME\PhantomStartup.ps1`""
 ```bash
 # Download
 mkdir -p ~/.phantom-terminal
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.sh -o ~/.phantom-terminal/PhantomStartup.sh
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/PhantomStartup.sh -o ~/.phantom-terminal/PhantomStartup.sh
 chmod +x ~/.phantom-terminal/PhantomStartup.sh
 
 # Add to shell profile (choose based on your shell)

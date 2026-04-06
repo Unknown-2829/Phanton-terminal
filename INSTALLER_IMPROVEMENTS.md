@@ -1,4 +1,4 @@
-# Installer Robustness Improvements v3.6.1
+# Installer Robustness Improvements v3.7.0
 
 ## Overview
 
@@ -440,6 +440,6 @@ The installer is now **production-grade** with:
 
 ---
 
-**Version**: 3.6.1
+**Version**: 3.7.0
 **Date**: 2026-02-12
 **Status**: ✅ Production Ready

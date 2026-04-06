@@ -395,6 +395,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[3.0.0]: https://github.com/Unknown-2829/Phanton-terminal/releases/tag/v3.0.0
-[2.0.0]: https://github.com/Unknown-2829/Phanton-terminal/releases/tag/v2.0.0
-[1.0.0]: https://github.com/Unknown-2829/Phanton-terminal/releases/tag/v1.0.0
+[3.0.0]: https://github.com/Unknown-2829/Phantom-terminal/releases/tag/v3.0.0
+[2.0.0]: https://github.com/Unknown-2829/Phantom-terminal/releases/tag/v2.0.0
+[1.0.0]: https://github.com/Unknown-2829/Phantom-terminal/releases/tag/v1.0.0

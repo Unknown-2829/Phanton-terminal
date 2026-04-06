@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - Fast Installer v3.6.1
+    Phantom Terminal - Fast Installer v3.7.0
 .DESCRIPTION
     Optimized installer with reliable config persistence.
-    Run: irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
+    Run: irm https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.ps1 | iex
 #>
 
 # Fast init
 $ErrorActionPreference = "Stop"
-$RepoUrl = "https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main"
+$RepoUrl = "https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main"
 $InstallPath = "$HOME\PhantomStartup.ps1"
 $ConfigDir = "$HOME\.phantom-terminal"
 $ConfigFile = "$ConfigDir\config.json"
@@ -37,7 +37,7 @@ if (Test-Path $ConfigFile) {
 Clear-Host
 Write-Host ""
 Write-Host "$Purple  ╔══════════════════════════════════════════════════════╗$R"
-Write-Host "$Purple  ║$Cyan        PHANTOM TERMINAL INSTALLER v3.6.1          $Purple║$R"
+Write-Host "$Purple  ║$Cyan        PHANTOM TERMINAL INSTALLER v3.7.0          $Purple║$R"
 Write-Host "$Purple  ╚══════════════════════════════════════════════════════╝$R"
 Write-Host ""
 

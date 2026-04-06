@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Phantom Terminal - Universal Installer v3.6.1
+# Phantom Terminal - Universal Installer v3.7.0
 # Cross-platform installer with automatic platform detection
 # Supports: Linux, macOS, Termux (Android)
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
-#   wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
+#   wget -qO- https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 #
 
 # Don't use set -e to allow better error handling
@@ -76,7 +76,7 @@ PLATFORM=$(detect_platform)
 # VARIABLES
 # ═══════════════════════════════════════════════════════════════════════════
 
-REPO_URL="https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main"
+REPO_URL="https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main"
 CONFIG_DIR="$HOME/.phantom-terminal"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 INSTALL_PATH="$CONFIG_DIR/PhantomStartup.sh"
@@ -102,6 +102,75 @@ detect_shell_profile() {
 
 detect_shell_profile
 
+clean_profile_entries() {
+    local target_profile="$1"
+    [[ ! -f "$target_profile" ]] && return 0
+
+    if [[ "$PLATFORM" == "macos" ]]; then
+        sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
+        sed -i '.bak' '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
+        sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
+    else
+        sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
+        sed -i.bak '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
+        sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
+    fi
+}
+
+choose_shell_profile() {
+    [[ "$NON_INTERACTIVE" == "true" ]] && return 0
+    [[ ! -t 0 ]] && return 0
+
+    local default_choice="1"
+    local profile_choice
+    local choices=()
+    local labels=()
+
+    if [[ "$PLATFORM" == "macos" ]]; then
+        choices=("$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.bashrc")
+        labels=("Zsh (~/.zshrc)" "Bash login (~/.bash_profile)" "Bash interactive (~/.bashrc)")
+    else
+        choices=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile")
+        labels=("Bash (~/.bashrc)" "Zsh (~/.zshrc)" "POSIX shell (~/.profile)")
+    fi
+
+    local i=0
+    local default_label
+    for p in "${choices[@]}"; do
+        i=$((i + 1))
+        if [[ "$p" == "$PROFILE" ]]; then
+            default_choice="$i"
+            break
+        fi
+    done
+    default_label="${labels[$((default_choice - 1))]}"
+
+    echo ""
+    echo "  ${GOLD}[0] INSTALL TARGET${R}"
+    i=0
+    for lbl in "${labels[@]}"; do
+        i=$((i + 1))
+        echo "  ${CYAN}[$i]${R} $lbl"
+    done
+
+    if ! read -p "  Choose shell/profile [Enter: $default_label]: " profile_choice; then
+        profile_choice=""
+    fi
+    profile_choice=${profile_choice:-$default_choice}
+
+    if [[ "$profile_choice" =~ ^[1-9][0-9]*$ ]] && [[ "$profile_choice" -le "${#choices[@]}" ]]; then
+        PROFILE="${choices[$((profile_choice - 1))]}"
+        case "$PROFILE" in
+            *".zshrc") SHELL_TYPE="zsh" ;;
+            *".bash_profile"|*".bashrc") SHELL_TYPE="bash" ;;
+            *) SHELL_TYPE="sh" ;;
+        esac
+        echo "  ${GREEN}[+]${WHITE} Using: $PROFILE${R}"
+    else
+        echo "  ${GOLD}[!]${WHITE} Invalid choice, using detected profile: $PROFILE${R}"
+    fi
+}
+
 # ═══════════════════════════════════════════════════════════════════════════
 # HEADER
 # ═══════════════════════════════════════════════════════════════════════════
@@ -109,7 +178,7 @@ detect_shell_profile
 clear
 echo ""
 echo "${PURPLE}  ╔══════════════════════════════════════════════════════╗${R}"
-echo "${PURPLE}  ║${CYAN}        PHANTOM TERMINAL INSTALLER v3.6.1          ${PURPLE}║${R}"
+echo "${PURPLE}  ║${CYAN}        PHANTOM TERMINAL INSTALLER v3.7.0          ${PURPLE}║${R}"
 echo "${PURPLE}  ╚══════════════════════════════════════════════════════╝${R}"
 echo ""
 
@@ -186,15 +255,8 @@ if [[ -f "$CONFIG_FILE" ]]; then
         MATRIX_MODE=$(grep -o '"MatrixMode"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" 2>/dev/null | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "Letters")
     fi
 
-    # Clean previous profile entries
-    if [[ -f "$PROFILE" ]]; then
-        # Use platform-compatible sed syntax
-        if [[ "$PLATFORM" == "macos" ]]; then
-            sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$PROFILE" 2>/dev/null || true
-        else
-            sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$PROFILE" 2>/dev/null || true
-        fi
-    fi
+    # Clean previous profile entries (including broken legacy fi lines)
+    clean_profile_entries "$PROFILE"
 
     echo "  ${GREEN}[+]${WHITE} Ready${R}"
     echo ""
@@ -211,6 +273,27 @@ if [[ ! -t 0 ]]; then
     echo "  ${GOLD}[i] Non-interactive mode: using defaults${R}"
     echo ""
 fi
+
+# Fallback shell detection for piped installs (e.g., curl|bash in Termux/macOS)
+if [[ "$SHELL_TYPE" == "sh" ]]; then
+    if [[ "${SHELL:-}" == *"zsh"* ]]; then
+        SHELL_TYPE="zsh"
+        PROFILE="$HOME/.zshrc"
+    elif [[ "${SHELL:-}" == *"bash"* ]]; then
+        SHELL_TYPE="bash"
+        if [[ "$PLATFORM" == "macos" ]]; then
+            [[ -f "$HOME/.bash_profile" ]] && PROFILE="$HOME/.bash_profile" || PROFILE="$HOME/.bashrc"
+        else
+            PROFILE="$HOME/.bashrc"
+        fi
+    fi
+fi
+
+# Let user choose installation profile (Linux/macOS/Termux)
+choose_shell_profile
+echo "  ${GREEN}[+]${WHITE} Shell: $SHELL_TYPE${R}"
+echo "  ${GREEN}[+]${WHITE} Profile: $PROFILE${R}"
+echo ""
 
 # Theme
 echo "  ${GOLD}[1] THEME${R}"
@@ -437,8 +520,11 @@ if ! touch "$PROFILE" 2>/dev/null; then
     exit 1
 fi
 
+# Clean once more before append to guarantee idempotent/recoverable installs
+clean_profile_entries "$PROFILE"
+
 # Check if already added to avoid duplicates
-if grep -q "Phantom Terminal" "$PROFILE" 2>/dev/null; then
+if grep -Eq "# >>> Phantom Terminal START >>>|PhantomStartup\\.sh|Phantom Terminal" "$PROFILE" 2>/dev/null; then
     echo "  ${GRAY}[i] Phantom Terminal already in profile, skipping${R}"
 else
     # Create backup before modifying
@@ -449,10 +535,12 @@ else
     # Add to profile with error checking
     if cat >> "$PROFILE" <<EOF
 
+# >>> Phantom Terminal START >>>
 # Phantom Terminal
 if [ -f "$INSTALL_PATH" ]; then
     source "$INSTALL_PATH"
 fi
+# <<< Phantom Terminal END <<<
 EOF
     then
         echo "  ${GREEN}[+] Profile updated${R}"

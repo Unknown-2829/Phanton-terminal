@@ -1,23 +1,23 @@
 <#
 .SYNOPSIS
-    Phantom Terminal - Advanced PowerShell Startup Animation v3.6.1
+    Phantom Terminal - Advanced PowerShell Startup Animation v3.7.0
 .DESCRIPTION
     Cinematic startup animation with multiple themes, effects, and customization.
     Features: Matrix/Binary rain, gradients, themes.
     Cross-platform support: Windows, Linux (via WSL), with Bash companion script.
 .NOTES
     Creator: @unknownlll2829 (Telegram)
-    GitHub: https://github.com/Unknown-2829/Phanton-terminal
-    Version: 3.6.1
+    GitHub: https://github.com/Unknown-2829/Phantom-terminal
+    Version: 3.7.0
 #>
 
 # ═══════════════════════════════════════════════════════════════════════════
 # VERSION & PATHS
 # ═══════════════════════════════════════════════════════════════════════════
 
-$Script:Version = "3.6.1"
+$Script:Version = "3.7.0"
 $Script:RepoOwner = "Unknown-2829"
-$Script:RepoName = "Phanton-terminal"
+$Script:RepoName = "Phantom-terminal"
 $Script:ConfigDir = "$env:USERPROFILE\.phantom-terminal"
 $Script:ConfigFile = "$Script:ConfigDir\config.json"
 $Script:CacheFile = "$Script:ConfigDir\cache.json"
@@ -1035,4 +1035,3 @@ function global:phantom-secrets {
 Set-PhantomPrompt
 Set-SmartSuggestions
 Start-PhantomTerminal
-
