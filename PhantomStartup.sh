@@ -3,12 +3,12 @@
 # Phantom Terminal v3.7.0
 # Cross-platform startup animation (Linux / macOS / Termux)
 # Creator  : @unknownlll2829 (Telegram)
-# GitHub   : https://github.com/Unknown-2829/Phanton-terminal
+# GitHub   : https://github.com/Unknown-2829/Phantom-terminal
 #
 
 SCRIPT_VERSION="3.7.0"
 REPO_OWNER="Unknown-2829"
-REPO_NAME="Phanton-terminal"
+REPO_NAME="Phantom-terminal"
 CONFIG_DIR="$HOME/.phantom-terminal"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 CACHE_FILE="$CONFIG_DIR/cache.json"

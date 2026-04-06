@@ -106,12 +106,12 @@ The Bash version includes **all** features from the PowerShell version:
 
 **Windows:**
 ```powershell
-irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.ps1 | iex
 ```
 
 **Linux/macOS/Termux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 ### What the Installer Does
@@ -231,7 +231,7 @@ None reported yet! This is the first cross-platform release.
 If you encounter any issues:
 1. Check [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md) troubleshooting section
 2. Run `test.sh` to verify installation
-3. Report issues on [GitHub](https://github.com/Unknown-2829/Phanton-terminal/issues)
+3. Report issues on [GitHub](https://github.com/Unknown-2829/Phantom-terminal/issues)
 
 ---
 
@@ -239,7 +239,7 @@ If you encounter any issues:
 
 - **Creator**: [@unknownlll2829](https://t.me/unknownlll2829)
 - **GitHub**: [Unknown-2829](https://github.com/Unknown-2829)
-- **Repository**: [Phanton-terminal](https://github.com/Unknown-2829/Phanton-terminal)
+- **Repository**: [Phantom-terminal](https://github.com/Unknown-2829/Phantom-terminal)
 
 ---
 

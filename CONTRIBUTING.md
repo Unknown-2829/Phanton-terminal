@@ -4,7 +4,7 @@ Thank you for your interest in contributing! 🎉
 
 ## 🐛 Bug Reports
 
-1. Check [existing issues](https://github.com/Unknown-2829/Phanton-terminal/issues) first
+1. Check [existing issues](https://github.com/Unknown-2829/Phantom-terminal/issues) first
 2. Create a new issue with:
    - Platform + shell version (Windows/PowerShell, Linux/bash, macOS/zsh, or Termux)
    - Terminal (Windows Terminal, ConHost, Alacritty, Kitty, tmux, etc.)

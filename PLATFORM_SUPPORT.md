@@ -24,7 +24,7 @@ Phantom Terminal v3.6.0+ supports multiple platforms with optimized implementati
 
 **One-line install:**
 ```powershell
-irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.ps1 | iex
 ```
 
 **Features:**
@@ -45,7 +45,7 @@ irm https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install
 
 **One-line install:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 **Tested distributions:**
@@ -73,7 +73,7 @@ curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/
 
 **One-line install:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 **Notes:**
@@ -98,7 +98,7 @@ brew install jq git
 
 **One-line install:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 **Termux-specific optimizations:**
@@ -121,7 +121,7 @@ pkg update && pkg upgrade
 pkg install curl git jq
 
 # Install Phantom Terminal
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/install.sh | bash
 ```
 
 **Tips:**
@@ -221,7 +221,7 @@ termux-setup-storage  # Grant storage permissions
 ```bash
 # Try manual installation
 mkdir -p ~/.phantom-terminal
-curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phanton-terminal/main/PhantomStartup.sh -o ~/.phantom-terminal/PhantomStartup.sh
+curl -fsSL https://raw.githubusercontent.com/Unknown-2829/Phantom-terminal/main/PhantomStartup.sh -o ~/.phantom-terminal/PhantomStartup.sh
 chmod +x ~/.phantom-terminal/PhantomStartup.sh
 ```
 
