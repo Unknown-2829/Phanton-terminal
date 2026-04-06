@@ -110,12 +110,12 @@ clean_profile_entries() {
         sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
-        sed -i '.bak' "/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
+        sed -i '.bak' "/^[[:space:]]*fi'[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
     else
         sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
-        sed -i.bak "/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
+        sed -i.bak "/^[[:space:]]*fi'[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
     fi
 }
 
@@ -153,7 +153,9 @@ choose_shell_profile() {
         echo "  ${CYAN}[$i]${R} $lbl"
     done
 
-    read -p "  Choose shell/profile [Enter=$default_choice]: " profile_choice
+    if ! read -p "  Choose shell/profile [Enter=$default_choice]: " profile_choice; then
+        profile_choice=""
+    fi
     profile_choice=${profile_choice:-$default_choice}
 
     if [[ "$profile_choice" =~ ^[1-9][0-9]*$ ]] && [[ "$profile_choice" -le "${#choices[@]}" ]]; then
@@ -522,7 +524,7 @@ fi
 clean_profile_entries "$PROFILE"
 
 # Check if already added to avoid duplicates
-if grep -q "# >>> Phantom Terminal START >>>" "$PROFILE" 2>/dev/null; then
+if grep -Eq "# >>> Phantom Terminal START >>>|PhantomStartup\\.sh|Phantom Terminal" "$PROFILE" 2>/dev/null; then
     echo "  ${GRAY}[i] Phantom Terminal already in profile, skipping${R}"
 else
     # Create backup before modifying
