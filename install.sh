@@ -107,13 +107,11 @@ clean_profile_entries() {
     [[ ! -f "$target_profile" ]] && return 0
 
     if [[ "$PLATFORM" == "macos" ]]; then
-        sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
-        sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi'"'"'[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
+        sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
     else
-        sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
-        sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi'"'"'[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
+        sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
     fi
@@ -137,6 +135,7 @@ choose_shell_profile() {
     fi
 
     local i=0
+    local default_label
     for p in "${choices[@]}"; do
         i=$((i + 1))
         if [[ "$p" == "$PROFILE" ]]; then
@@ -144,6 +143,7 @@ choose_shell_profile() {
             break
         fi
     done
+    default_label="${labels[$((default_choice - 1))]}"
 
     echo ""
     echo "  ${GOLD}[0] INSTALL TARGET${R}"
@@ -153,7 +153,7 @@ choose_shell_profile() {
         echo "  ${CYAN}[$i]${R} $lbl"
     done
 
-    if ! read -p "  Choose shell/profile [Enter=$default_choice]: " profile_choice; then
+    if ! read -p "  Choose shell/profile [Enter: $default_label]: " profile_choice; then
         profile_choice=""
     fi
     profile_choice=${profile_choice:-$default_choice}
