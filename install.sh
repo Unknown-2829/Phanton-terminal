@@ -110,14 +110,12 @@ clean_profile_entries() {
         sed -i '.bak' '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i '.bak' '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
-        sed -i '.bak' "/^[[:space:]]*fi[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
-        sed -i '.bak' "/^[[:space:]]*fi'[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
+        sed -i '.bak' "/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
     else
         sed -i.bak '/if[[:space:]]\+\[[[:space:]]-f[[:space:]]".*PhantomStartup\.sh"[[:space:]]\+\];[[:space:]]*then/,/^[[:space:]]*fi[[:space:]]*$/d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/# >>> Phantom Terminal START >>>/,/# <<< Phantom Terminal END <<</d' "$target_profile" 2>/dev/null || true
         sed -i.bak '/PhantomStartup\|Phantom Terminal/d' "$target_profile" 2>/dev/null || true
-        sed -i.bak "/^[[:space:]]*fi[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
-        sed -i.bak "/^[[:space:]]*fi'[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
+        sed -i.bak "/^[[:space:]]*fi[^[:alnum:]_]*[[:space:]]*$/d" "$target_profile" 2>/dev/null || true
     fi
 }
 
